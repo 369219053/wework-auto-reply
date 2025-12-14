@@ -26,6 +26,19 @@ jobs:
       with:
         gradle-version: "8.2"
 
+    - name: Generate Debug Keystore
+      run: |
+        cd app
+        keytool -genkey -v -keystore debug.keystore \
+          -storepass android \
+          -alias androiddebugkey \
+          -keypass android \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -dname "CN=Android Debug,O=Android,C=US"
+        ls -lh debug.keystore
+
     - name: Build with Gradle
       run: gradle assembleDebug --no-daemon
 
