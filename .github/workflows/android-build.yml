@@ -28,8 +28,7 @@ jobs:
 
     - name: Generate Debug Keystore
       run: |
-        cd app
-        keytool -genkey -v -keystore debug.keystore \
+        keytool -genkey -v -keystore app/debug.keystore \
           -storepass android \
           -alias androiddebugkey \
           -keypass android \
@@ -37,7 +36,7 @@ jobs:
           -keysize 2048 \
           -validity 10000 \
           -dname "CN=Android Debug,O=Android,C=US"
-        ls -lh debug.keystore
+        ls -lh app/debug.keystore
 
     - name: Build with Gradle
       run: gradle assembleDebug --no-daemon
