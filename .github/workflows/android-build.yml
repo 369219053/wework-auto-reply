@@ -2,3 +2,67 @@ uses: gradle/actions/setup-gradle@v3
 
       with:
               gradle-version: 8.2
+name: Android CI
+
+on:
+  push:
+      branches: [ main ]
+        pull_request:
+            branches: [ main ]
+              workflow_dispatch:
+
+              jobs:
+                build:
+                    runs-on: ubuntu-latest
+
+                        steps:
+                            - name: Checkout code
+                                  uses: actions/checkout@v4
+
+                                      - name: Set up JDK 17
+                                            uses: actions/setup-java@v4
+                                                  with:
+                                                          java-version: '17'
+                                                                  distribution: 'temurin'
+
+                                                                      - name: Setup Gradle
+                                                                            uses: gradle/actions/setup-gradle@v3
+                                                                                  with:
+                                                                                          gradle-version: 8.2
+
+                                                                                              - name: Build with Gradle
+                                                                                                    run: gradle assembleRelease --no-daemon
+                                                                                                    
+                                                                                                        - name: Upload APK
+                                                                                                              uses: actions/upload-artifact@v4
+                                                                                                                    with:
+                                                                                                                            name: wework-auto-reply-apk
+                                                                                                                                    path: app/build/outputs/apk/release/*.apk
+                                                                                                                                    
+                                                                                                                                        - name: Create Release
+                                                                                                                                              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+                                                                                                                                                    uses: softprops/action-gh-release@v1
+                                                                                                                                                          with:
+                                                                                                                                                                  tag_name: v1.0.${{ github.run_number }}
+                                                                                                                                                                          name: Release v1.0.${{ github.run_number }}
+                                                                                                                                                                                  body: |
+                                                                                                                                                                                            企微自动回复 APK
+                                                                                                                                                                                                      
+                                                                                                                                                                                                                ## 功能特性
+                                                                                                                                                                                                                          - 自动监听企业微信好友申请通知
+                                                                                                                                                                                                                                    - 自动发送欢迎语和群聊邀请链接
+                                                                                                                                                                                                                                              - 简单易用的配置界面
+                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                  ## 安装说明
+                                                                                                                                                                                                                                                                            1. 下载APK文件
+                                                                                                                                                                                                                                                                                      2. 安装到Android手机
+                                                                                                                                                                                                                                                                                                3. 开启通知访问权限和无障碍服务权限
+                                                                                                                                                                                                                                                                                                          4. 配置欢迎语和群聊链接
+                                                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                                                              ## 注意事项
+                                                                                                                                                                                                                                                                                                                                        - 需要Android 7.0 (API 24) 及以上版本
+                                                                                                                                                                                                                                                                                                                                                  - 需要授予通知访问和无障碍服务权限
+                                                                                                                                                                                                                                                                                                                                                          files: app/build/outputs/apk/release/*.apk
+                                                                                                                                                                                                                                                                                                                                                                env:
+                                                                                                                                                                                                                                                                                                                                                                        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                                                                                                                                                                                                                                                                                                                                                                        
