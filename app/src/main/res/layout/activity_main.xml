@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="企微自动回复配置"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 启用开关 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="启用自动回复"
+                android:textSize="16sp" />
+
+            <Switch
+                android:id="@+id/switch_enabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+        </LinearLayout>
+
+        <!-- 欢迎语 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="欢迎语"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/et_welcome_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入欢迎语"
+            android:minLines="2"
+            android:gravity="top"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text" />
+
+        <!-- 群聊链接 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="群聊链接"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/et_group_link"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入群聊邀请链接"
+            android:inputType="textUri"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text" />
+
+        <!-- 保存按钮 -->
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="保存配置"
+            android:textSize="16sp"
+            android:layout_marginTop="24dp"
+            android:padding="12dp" />
+
+        <!-- 权限检查按钮 -->
+        <Button
+            android:id="@+id/btn_check_permissions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="检查权限"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:padding="12dp" />
+
+        <!-- 使用说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="使用说明:\n\n1. 点击「检查权限」开启所需权限\n2. 配置欢迎语和群聊链接\n3. 点击「保存配置」\n4. 当有新好友申请时,会自动发送欢迎语和群聊链接"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginTop="24dp"
+            android:padding="12dp"
+            android:background="#F5F5F5" />
+
+    </LinearLayout>
+
+</ScrollView>
+
