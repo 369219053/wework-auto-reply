@@ -39,7 +39,7 @@ jobs:
         ls -lh app/debug.keystore
 
     - name: Build with Gradle
-      run: gradle assembleDebug --no-daemon
+      run: |         echo "=== Listing project structure ==="         ls -la         echo "=== Listing app directory ==="         ls -la app/         echo "=== Starting Gradle build with detailed output ==="         gradle assembleDebug --no-daemon --stacktrace --info
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
