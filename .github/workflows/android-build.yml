@@ -27,13 +27,13 @@ jobs:
         gradle-version: "8.2"
 
     - name: Build with Gradle
-      run: gradle assembleRelease --no-daemon
+      run: gradle assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: wework-auto-reply-apk
-        path: app/build/outputs/apk/release/*.apk
+        path: app/build/outputs/apk/debug/*.apk
 
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -58,6 +58,6 @@ jobs:
           ## 注意事项
           - 需要Android 7.0 (API 24) 及以上版本
           - 需要授予通知访问和无障碍服务权限
-        files: app/build/outputs/apk/release/*.apk
+        files: app/build/outputs/apk/debug/*.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
