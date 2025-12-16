@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">企微自动回复</string>
+    <string name="app_name">企微批量处理</string>
     <string name="accessibility_service_description">用于自动发送欢迎消息和群聊邀请</string>
+    <string name="batch_service_description">用于批量通过好友申请并邀请到群聊</string>
 </resources>
 
