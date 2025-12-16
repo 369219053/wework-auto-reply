@@ -141,7 +141,7 @@ class WeworkBatchService : AccessibilityService() {
             // 点击第一个"查看"按钮
             val viewButton = viewButtons.first()
             if (!AccessibilityHelper.clickNode(viewButton)) {
-                sendLogToActivity("❌ 点击"查看"按钮失败")
+                sendLogToActivity("❌ 点击\"查看\"按钮失败")
                 break
             }
 
@@ -156,7 +156,7 @@ class WeworkBatchService : AccessibilityService() {
             // 点击"通过验证"按钮
             val approveButton = AccessibilityHelper.findNodeByText(detailRoot, "通过验证", exact = true)
             if (approveButton == null) {
-                sendLogToActivity("❌ 未找到"通过验证"按钮")
+                sendLogToActivity("❌ 未找到\"通过验证\"按钮")
                 performGlobalAction(GLOBAL_ACTION_BACK)
                 continue
             }
@@ -168,7 +168,7 @@ class WeworkBatchService : AccessibilityService() {
             val completeRoot = rootInActiveWindow
             val completeButton = AccessibilityHelper.findNodeByText(completeRoot, "完成", exact = true)
             if (completeButton == null) {
-                sendLogToActivity("❌ 未找到"完成"按钮")
+                sendLogToActivity("❌ 未找到\"完成\"按钮")
                 performGlobalAction(GLOBAL_ACTION_BACK)
                 continue
             }
