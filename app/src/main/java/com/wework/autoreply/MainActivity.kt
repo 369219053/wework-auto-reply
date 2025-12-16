@@ -71,11 +71,11 @@ class MainActivity : AppCompatActivity() {
     private fun registerReceivers() {
         // 注册日志接收器
         val logFilter = IntentFilter("com.wework.autoreply.LOG_UPDATE")
-        registerReceiver(logReceiver, logFilter, RECEIVER_NOT_EXPORTED)
+        registerReceiver(logReceiver, logFilter, Context.RECEIVER_NOT_EXPORTED)
 
         // 注册统计数据接收器
         val statsFilter = IntentFilter("com.wework.autoreply.STATS_UPDATE")
-        registerReceiver(statsReceiver, statsFilter, RECEIVER_NOT_EXPORTED)
+        registerReceiver(statsReceiver, statsFilter, Context.RECEIVER_NOT_EXPORTED)
     }
 
     private fun unregisterReceivers() {

@@ -53,7 +53,7 @@ class WeworkBatchService : AccessibilityService() {
 
         // 注册广播接收器
         val filter = IntentFilter("com.wework.autoreply.START_BATCH_PROCESS")
-        registerReceiver(batchProcessReceiver, filter, RECEIVER_NOT_EXPORTED)
+        registerReceiver(batchProcessReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
 
         Log.d(TAG, "批量处理服务已启动")
     }
