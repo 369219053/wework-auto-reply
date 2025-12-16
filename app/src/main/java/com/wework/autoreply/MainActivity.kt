@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadConfig() {
         val groupName = configManager.getGroupName()
         if (groupName.isNotEmpty()) {
-            etGroupName.setText(groupName)
+            etGroupName.setText(groupName as CharSequence)
         }
     }
 
