@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,101 +14,146 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="企微自动回复配置"
+            android:text="企微批量处理助手"
             android:textSize="24sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            android:textColor="#333333" />
 
-        <!-- 启用开关 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="启用自动回复"
-                android:textSize="16sp" />
-
-            <Switch
-                android:id="@+id/switch_enabled"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
-
-        <!-- 欢迎语 -->
+        <!-- 群聊名称 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="欢迎语"
+            android:text="目标群聊名称"
             android:textSize="16sp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:textColor="#666666" />
 
         <EditText
-            android:id="@+id/et_welcome_message"
+            android:id="@+id/et_group_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="请输入欢迎语"
-            android:minLines="2"
-            android:gravity="top"
+            android:hint="请输入群聊名称(包括标点符号)"
+            android:inputType="text"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text" />
+            android:background="@android:drawable/edit_text"
+            android:textSize="14sp" />
 
-        <!-- 群聊链接 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="群聊链接"
-            android:textSize="16sp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp" />
+            android:text="⚠️ 必须完全匹配,包括括号和数字\n例如: 智界Aigc客户群（18）"
+            android:textSize="12sp"
+            android:textColor="#FF9800"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp" />
 
-        <EditText
-            android:id="@+id/et_group_link"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="请输入群聊邀请链接"
-            android:inputType="textUri"
-            android:padding="12dp"
-            android:background="@android:drawable/edit_text" />
-
-        <!-- 保存按钮 -->
+        <!-- 开始批量处理按钮 -->
         <Button
-            android:id="@+id/btn_save"
+            android:id="@+id/btn_start_batch"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="保存配置"
-            android:textSize="16sp"
-            android:layout_marginTop="24dp"
-            android:padding="12dp" />
+            android:layout_height="64dp"
+            android:text="🚀 开始批量处理"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:background="#4CAF50"
+            android:textColor="#FFFFFF" />
 
         <!-- 权限检查按钮 -->
         <Button
             android:id="@+id/btn_check_permissions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="检查权限"
+            android:text="检查无障碍权限"
             android:textSize="16sp"
             android:layout_marginTop="16dp"
             android:padding="12dp" />
+
+        <!-- 统计信息 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            android:padding="16dp"
+            android:background="#F5F5F5">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📊 处理统计"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"
+                android:textColor="#333333" />
+
+            <TextView
+                android:id="@+id/tv_approved_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="✅ 通过验证: 0 个"
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp"
+                android:textColor="#4CAF50" />
+
+            <TextView
+                android:id="@+id/tv_invited_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="👥 邀请成功: 0 个"
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp"
+                android:textColor="#2196F3" />
+
+            <TextView
+                android:id="@+id/tv_failed_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="❌ 邀请失败: 0 个"
+                android:textSize="14sp"
+                android:textColor="#F44336" />
+        </LinearLayout>
+
+        <!-- 日志显示 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📝 操作日志"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="#333333" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="#FFFFFF"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/tv_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="等待开始..."
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:textColor="#666666" />
+        </ScrollView>
 
         <!-- 使用说明 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="使用说明:\n\n1. 点击「检查权限」开启所需权限\n2. 配置欢迎语和群聊链接\n3. 点击「保存配置」\n4. 当有新好友申请时,会自动发送欢迎语和群聊链接"
+            android:text="📖 使用说明:\n\n1. 点击「检查无障碍权限」开启权限\n2. 输入目标群聊名称(必须完全匹配)\n3. 手动打开企业微信,进入「新的客户」列表\n4. 点击「开始批量处理」按钮\n5. 等待自动完成所有操作"
             android:textSize="14sp"
             android:lineSpacingExtra="4dp"
             android:layout_marginTop="24dp"
             android:padding="12dp"
-            android:background="#F5F5F5" />
+            android:background="#E3F2FD"
+            android:textColor="#1976D2" />
 
     </LinearLayout>
 
