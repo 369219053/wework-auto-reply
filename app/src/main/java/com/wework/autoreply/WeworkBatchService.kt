@@ -77,14 +77,19 @@ class WeworkBatchService : AccessibilityService() {
             sendLogToActivity("⚠️ 正在处理中,请稍候...")
             return
         }
-        
+
         isProcessing = true
         sendLogToActivity("🚀 开始批量处理...")
         sendLogToActivity("📋 目标群聊: $groupName")
-        
+
         // 在后台线程执行批量处理
         Thread {
             try {
+                // 打开企业微信
+                sendLogToActivity("📱 正在打开企业微信...")
+                openWework()
+                Thread.sleep(3000) // 等待企业微信启动
+
                 // 阶段1: 批量通过好友申请
                 val approvedCustomers = approveAllCustomers()
                 
@@ -384,6 +389,25 @@ class WeworkBatchService : AccessibilityService() {
         intent.putExtra("invited", invited)
         intent.putExtra("failed", failed)
         sendBroadcast(intent)
+    }
+
+    /**
+     * 打开企业微信APP
+     */
+    private fun openWework() {
+        try {
+            val intent = packageManager.getLaunchIntentForPackage(WEWORK_PACKAGE)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                Log.d(TAG, "已打开企业微信")
+            } else {
+                sendLogToActivity("❌ 未找到企业微信应用")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "打开企业微信失败", e)
+            sendLogToActivity("❌ 打开企业微信失败: ${e.message}")
+        }
     }
     
     data class BatchResult(val success: List<String>, val failed: List<String>)

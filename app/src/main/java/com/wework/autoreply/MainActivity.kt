@@ -137,9 +137,12 @@ class MainActivity : AppCompatActivity() {
         sendBroadcast(intent)
 
         addLog("📱 已发送批量处理指令")
-        addLog("⏳ 请确保企业微信已打开并在「新的客户」列表页面")
+        addLog("🚀 正在打开企业微信...")
 
-        Toast.makeText(this, "批量处理已启动,请查看日志", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "批量处理已启动", Toast.LENGTH_SHORT).show()
+
+        // 最小化应用到后台
+        moveTaskToBack(true)
     }
 
     fun addLog(message: String) {
