@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_group_management">
+
+    <fragment
+        android:id="@+id/navigation_group_management"
+        android:name="com.wework.autoreply.ui.GroupManagementFragment"
+        android:label="群组管理" />
+
+    <fragment
+        android:id="@+id/navigation_message_template"
+        android:name="com.wework.autoreply.ui.MessageGroupFragment"
+        android:label="消息组" />
+
+    <fragment
+        android:id="@+id/navigation_batch_send"
+        android:name="com.wework.autoreply.ui.BatchSendFragment"
+        android:label="批量发送" />
+
+</navigation>
+

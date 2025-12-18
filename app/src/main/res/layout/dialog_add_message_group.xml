@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 消息组名称 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="消息组名称"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:paddingBottom="4dp" />
+
+    <EditText
+        android:id="@+id/et_group_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入消息组名称"
+        android:inputType="text"
+        android:maxLines="1"
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text" />
+
+    <!-- 消息组描述 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="消息组描述(可选)"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:paddingBottom="4dp" />
+
+    <EditText
+        android:id="@+id/et_group_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入消息组描述"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:minLines="2"
+        android:padding="12dp"
+        android:gravity="top"
+        android:background="@android:drawable/edit_text" />
+
+    <!-- 提示信息 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="💡 创建消息组后,可以在组内添加多条消息(文字、图片、卡片),批量发送时会依次发送所有消息"
+        android:textSize="12sp"
+        android:textColor="#666666" />
+
+</LinearLayout>
+

@@ -2,5 +2,7 @@
     <string name="app_name">企微批量处理</string>
     <string name="accessibility_service_description">用于自动发送欢迎消息和群聊邀请</string>
     <string name="batch_service_description">用于批量通过好友申请并邀请到群聊</string>
+    <string name="wework_auto_service_description">企微自动化服务 - 完全自动化批量处理好友申请和群聊邀请</string>
+    <string name="batch_send_service_description">批量发送服务 - 自动批量发送消息到多个群聊</string>
 </resources>
 

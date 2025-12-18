@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -53,7 +54,11 @@ class WeworkBatchService : AccessibilityService() {
 
         // 注册广播接收器
         val filter = IntentFilter("com.wework.autoreply.START_BATCH_PROCESS")
-        registerReceiver(batchProcessReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(batchProcessReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(batchProcessReceiver, filter)
+        }
 
         Log.d(TAG, "批量处理服务已启动")
     }

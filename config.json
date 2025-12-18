@@ -1,0 +1,15 @@
+{
+  "groupName": "远方好物浦江活力群1",
+  "targetGroup": "远方好物浦江活力群1",
+  "checkInterval": 30,
+  "maxRetry": 3,
+  "debug": true,
+  "description": {
+    "groupName": "目标群聊名称 - 用于批量邀请功能",
+    "targetGroup": "目标群聊名称 - 用户需要手动设置为实际的群聊名称(包括括号和数字)",
+    "checkInterval": "检查新客户的间隔时间(秒)",
+    "maxRetry": "操作失败时的最大重试次数",
+    "debug": "是否开启调试模式(会输出详细日志)"
+  }
+}
+

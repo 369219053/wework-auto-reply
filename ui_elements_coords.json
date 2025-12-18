@@ -1,0 +1,244 @@
+{
+  "step1_message_page": {
+    "description": "消息页面 - 底部导航栏",
+    "elements": {
+      "消息": {
+        "text": "消息",
+        "bounds": "[0,1570][144,1594]",
+        "center": [72, 1582],
+        "selected": true
+      },
+      "邮件": {
+        "text": "邮件",
+        "bounds": "[144,1570][288,1594]",
+        "center": [216, 1582]
+      },
+      "文档": {
+        "text": "文档",
+        "bounds": "[288,1570][432,1594]",
+        "center": [360, 1582]
+      },
+      "工作台": {
+        "text": "工作台",
+        "bounds": "[432,1570][576,1594]",
+        "center": [504, 1582]
+      },
+      "通讯录": {
+        "text": "通讯录",
+        "bounds": "[576,1570][720,1594]",
+        "center": [648, 1582],
+        "badge": "1"
+      },
+      "智界Aigc客户群（18）": {
+        "text": "智界Aigc客户群（18）",
+        "bounds": "[148,289][449,332]",
+        "center": [298, 310]
+      },
+      "天天一泉～小石榴": {
+        "text": "天天一泉～小石榴",
+        "bounds": "[148,433][404,476]",
+        "center": [276, 454]
+      }
+    }
+  },
+  "step2_contacts_page": {
+    "description": "通讯录页面",
+    "elements": {
+      "添加客户": {
+        "text": "添加客户",
+        "bounds": "[128,376][256,414]",
+        "center": [192, 395]
+      }
+    }
+  },
+  "step3_add_customer_page": {
+    "description": "添加客户页面 - 标签页",
+    "elements": {
+      "添加客户_tab": {
+        "text": "添加客户",
+        "bounds": "[124,201][236,239]",
+        "center": [180, 220]
+      },
+      "新的客户_tab": {
+        "text": "新的客户",
+        "bounds": "[484,201][596,239]",
+        "center": [540, 220]
+      }
+    }
+  },
+  "step4_new_customers_list": {
+    "description": "新的客户列表页面",
+    "elements": {
+      "查看_button": {
+        "text": "查看",
+        "note": "动态元素,每个客户的坐标不同,需要实时查找",
+        "example_bounds": "[600,622][688,676]",
+        "example_center": [644, 649]
+      },
+      "已添加_button": {
+        "text": "已添加",
+        "note": "已添加的客户显示此按钮",
+        "example_bounds": "[576,377][688,431]",
+        "example_center": [632, 404]
+      }
+    }
+  },
+  "step5_customer_detail": {
+    "description": "客户详情页面",
+    "elements": {
+      "通过验证_button": {
+        "text": "通过验证",
+        "bounds": "[24,1488][696,1584]",
+        "center": [360, 1536],
+        "note": "点击此按钮通过客户的好友申请"
+      },
+      "客户名称": {
+        "note": "客户名称位置,需要从UI中提取并保存,用于后续邀请",
+        "example_text": "群助理",
+        "example_bounds": "[56,429][188,488]"
+      },
+      "企业名称": {
+        "note": "企业名称位置",
+        "example_text": "全匠企业管理",
+        "example_bounds": "[24,220][300,266]"
+      }
+    }
+  },
+  "step6_after_approve": {
+    "description": "通过验证后的确认页面(为对方添加备注)",
+    "elements": {
+      "完成_button": {
+        "text": "完成",
+        "bounds": "[588,76][720,172]",
+        "center": [654, 124],
+        "note": "右上角的完成按钮,点击后返回客户详情页"
+      }
+    }
+  },
+  "step7_return_to_messages": {
+    "description": "返回消息页面",
+    "note": "从客户详情页按返回键2次: adb shell input keyevent 4 (重复2次,3次会退出企业微信)"
+  },
+  "step8_enter_group_chat": {
+    "description": "进入群聊",
+    "elements": {
+      "群聊入口": {
+        "note": "与step1相同,点击群聊进入聊天页面",
+        "center": [298, 310]
+      }
+    }
+  },
+  "step9_group_chat_page": {
+    "description": "群聊页面",
+    "elements": {
+      "更多功能_button": {
+        "text": "+",
+        "resource_id": "com.tencent.wework:id/nhi",
+        "bounds": "[624,76][720,172]",
+        "center": [672, 124],
+        "note": "右上角的+按钮,点击打开群详情"
+      }
+    }
+  },
+  "step10_group_details": {
+    "description": "群详情页面",
+    "elements": {
+      "查看全部群成员_button": {
+        "text": "查看全部群成员",
+        "bounds": "[24,808][696,918]",
+        "center": [360, 863],
+        "note": "点击查看所有群成员"
+      }
+    }
+  },
+  "step11_all_members_page": {
+    "description": "全部群成员页面",
+    "elements": {
+      "添加_button": {
+        "text": "添加",
+        "bounds": "[588,76][720,172]",
+        "center": [654, 124],
+        "note": "右上角的添加按钮"
+      }
+    }
+  },
+  "step12_add_member_page": {
+    "description": "添加群成员页面",
+    "elements": {
+      "我的客户_category": {
+        "text": "我的客户",
+        "icon_bounds": "[32,187][88,253]",
+        "icon_center": [60, 220],
+        "note": "点击图标展开我的客户列表"
+      },
+      "企业通讯录_category": {
+        "text": "企业通讯录",
+        "note": "企业通讯录分类"
+      },
+      "最近联系人_category": {
+        "text": "最近联系人",
+        "note": "最近联系人分类"
+      }
+    }
+  },
+  "step13_select_customer": {
+    "description": "选择客户",
+    "elements": {
+      "客户列表项": {
+        "note": "动态元素,需要根据step5提取的客户名称查找",
+        "example_customer": "群助理",
+        "example_bounds": "[0,338][720,455]",
+        "example_center": [360, 396],
+        "search_method": "grep '客户名称' ui.xml 查找包含客户名称的行,然后点击整行"
+      }
+    }
+  },
+  "step14_confirm_selection": {
+    "description": "确认选择页面",
+    "elements": {
+      "确定_button": {
+        "text": "确定(1)",
+        "bounds": "[530,1526][698,1590]",
+        "center": [614, 1558],
+        "note": "确定按钮,括号内数字表示已选择的客户数量"
+      },
+      "附带聊天记录_checkbox": {
+        "text": "附带聊天记录",
+        "note": "可选项,是否附带聊天记录"
+      }
+    }
+  },
+  "step15_check_invite_button": {
+    "description": "检查是否需要点击邀请按钮(大群>100人)",
+    "note": "如果群成员超过一定数量,点击确定后还需要再点击'邀请'按钮",
+    "elements": {
+      "邀请_button": {
+        "text": "邀请",
+        "note": "动态元素,只在大群中出现,需要检测是否存在",
+        "search_method": "grep '邀请' ui.xml 检查是否存在邀请按钮"
+      }
+    }
+  },
+  "automation_workflow": {
+    "description": "完整自动化流程",
+    "steps": [
+      "1. 点击通讯录标签 [648, 1582]",
+      "2. 点击添加客户 [192, 395]",
+      "3. 点击新的客户标签 [540, 220]",
+      "4. 查找并点击第一个'查看'按钮 (动态查找)",
+      "5. 提取客户名称 (保存到变量customerName)",
+      "6. 点击通过验证 [360, 1536]",
+      "7. 点击完成 [360, 1540]",
+      "8. 按返回键2次返回消息页面 (注意:3次会退出企业微信)",
+      "9. 点击群聊入口 [298, 310]",
+      "10. 点击右上角+按钮 [672, 124]",
+      "11. 点击查看全部群成员 [360, 863]",
+      "12. 点击添加按钮 [654, 124]",
+      "13. 点击我的客户图标 [60, 220]",
+      "14. 查找并点击客户 (使用步骤5保存的customerName)",
+      "15. 点击确定按钮 [614, 1558]",
+      "16. 检查是否有邀请按钮,如有则点击"
+    ]
+  }
+}
+

@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -15,9 +17,9 @@
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
         tools:targetApi="31">
         
-        <!-- 主Activity -->
+        <!-- 启动器Activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LauncherActivity"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
@@ -25,6 +27,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 主Activity (功能一) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="批量通过好友" />
+
+        <!-- 批量发送Activity (功能二) -->
+        <activity
+            android:name=".BatchSendActivity"
+            android:exported="false"
+            android:label="批量发送" />
+
+        <!-- 消息组详情Activity -->
+        <activity
+            android:name=".MessageGroupDetailActivity"
+            android:exported="false"
+            android:label="消息组详情" />
 
         <!-- 通知监听服务 -->
         <service
@@ -60,6 +80,32 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/batch_service_config" />
+        </service>
+
+        <!-- 企微自动化服务 (新版完全自动化) -->
+        <service
+            android:name=".WeworkAutoService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/wework_auto_service_config" />
+        </service>
+
+        <!-- 批量发送服务 (功能二) -->
+        <service
+            android:name=".BatchSendService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/batch_send_service_config" />
         </service>
 
     </application>

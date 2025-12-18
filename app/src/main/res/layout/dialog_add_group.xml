@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- 群组名称 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="群组名称"
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <EditText
+        android:id="@+id/et_group_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="例如: 重要客户群组"
+        android:inputType="text"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 群聊列表 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="群聊列表 (每行一个群聊名称)"
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <EditText
+        android:id="@+id/et_chat_list"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:hint="智界Aigc客户群\nVIP客户专属群\n核心合作伙伴群"
+        android:inputType="textMultiLine"
+        android:gravity="top"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💡 提示: 群聊名称必须完全匹配,包括括号和数字"
+        android:textSize="12sp"
+        android:textColor="#FF9800"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>
+

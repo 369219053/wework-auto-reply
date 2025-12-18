@@ -1,0 +1,97 @@
+{
+  "activities": {
+    "message_page": "com.tencent.wework.launch.WwMainActivity",
+    "group_chat": "com.tencent.wework.msg.controller.ExternalGroupMessageListActivity",
+    "group_details": "com.tencent.wework.common.list.BaseContentActivity2",
+    "all_members": "com.tencent.wework.msg.controller.ExternalGroupMemberActivity",
+    "add_member_select": "com.tencent.wework.contact.controller.ExternalGroupAddMemberSelectActivity"
+  },
+  "steps": {
+    "step1_message_page": {
+      "activity": "com.tencent.wework.launch.WwMainActivity",
+      "description": "消息页面",
+      "elements": {
+        "群聊入口": {
+          "text": "智界Aigc客户群",
+          "note": "需要动态查找群聊名称"
+        }
+      }
+    },
+    "step2_group_chat": {
+      "activity": "com.tencent.wework.msg.controller.ExternalGroupMessageListActivity",
+      "description": "群聊页面",
+      "elements": {
+        "三个点_button": {
+          "bounds": "[644,76][720,172]",
+          "center": [682, 124],
+          "note": "右上角三个点按钮,固定位置"
+        }
+      }
+    },
+    "step3_group_details": {
+      "activity": "com.tencent.wework.common.list.BaseContentActivity2",
+      "description": "群详情页面",
+      "elements": {
+        "查看全部群成员": {
+          "text": "查看全部群成员",
+          "bounds": "[48,840][286,886]",
+          "center": [167, 863],
+          "note": "点击进入全部群成员页面"
+        }
+      }
+    },
+    "step4_all_members": {
+      "activity": "com.tencent.wework.msg.controller.ExternalGroupMemberActivity",
+      "description": "全部群成员页面",
+      "elements": {
+        "添加_button": {
+          "text": "添加",
+          "resource_id": "com.tencent.wework:id/nhi",
+          "bounds": "[588,76][720,172]",
+          "center": [654, 124],
+          "note": "右上角添加按钮"
+        }
+      }
+    },
+    "step5_add_member_select": {
+      "activity": "com.tencent.wework.contact.controller.ExternalGroupAddMemberSelectActivity",
+      "description": "添加成员选择页面",
+      "elements": {
+        "我的客户": {
+          "text": "我的客户",
+          "bounds": "[112,198][240,241]",
+          "center": [176, 220],
+          "note": "点击进入我的客户列表"
+        }
+      }
+    },
+    "step6_my_customers": {
+      "activity": "com.tencent.wework.contact.controller.ExternalGroupAddMemberSelectActivity",
+      "description": "我的客户列表页面",
+      "elements": {
+        "customer_name": {
+          "note": "需要动态查找客户名称"
+        }
+      }
+    },
+    "step7_customer_selected": {
+      "activity": "com.tencent.wework.contact.controller.ExternalGroupAddMemberSelectActivity",
+      "description": "选中客户后的页面",
+      "elements": {
+        "确定_button": {
+          "text": "确定(1)",
+          "resource_id": "com.tencent.wework:id/lnx",
+          "bounds": "[530,1526][698,1590]",
+          "center": [614, 1558],
+          "note": "底部确定按钮,点击后完成邀请"
+        }
+      }
+    },
+    "step8_after_confirm": {
+      "activity": "com.tencent.wework.msg.controller.ExternalGroupMemberActivity",
+      "description": "点击确定后返回全部群成员页面",
+      "note": "邀请完成,无需额外操作"
+    }
+  }
+}
+

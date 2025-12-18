@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- 模板名称 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="模板名称"
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <EditText
+        android:id="@+id/et_template_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="例如: 产品宣传图"
+        android:inputType="text"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 消息类型 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="消息类型"
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <RadioGroup
+        android:id="@+id/rg_message_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rb_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📝 文本"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rb_image"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🖼️ 图片" />
+
+        <RadioButton
+            android:id="@+id/rb_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🎴 卡片" />
+
+    </RadioGroup>
+
+    <!-- 文本内容 (仅文本类型显示) -->
+    <LinearLayout
+        android:id="@+id/layout_text_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="文本内容"
+            android:textSize="14sp"
+            android:textColor="#666666" />
+
+        <EditText
+            android:id="@+id/et_text_content"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:hint="请输入要发送的文本内容"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+    <!-- 素材选择提示 (图片/卡片类型显示) -->
+    <LinearLayout
+        android:id="@+id/layout_material_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 提示: 图片和卡片消息需要先在素材库中准备好素材"
+            android:textSize="12sp"
+            android:textColor="#FF9800"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="暂时只支持文本消息,图片/卡片功能开发中..."
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
+

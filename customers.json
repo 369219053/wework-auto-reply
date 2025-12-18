@@ -1,0 +1,11 @@
+{
+  "customers": [
+    {
+      "name": "二进制刀仔",
+      "company": "",
+      "approvedAt": "2025-12-15T18:37:18.352Z",
+      "invitedAt": "2025-12-15T18:38:01.888Z",
+      "status": "completed"
+    }
+  ]
+}

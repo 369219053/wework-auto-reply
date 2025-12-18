@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 消息组名称 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="消息组名称"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/et_group_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="如:产品宣传套餐"
+            android:inputType="text"
+            android:maxLines="1"
+            android:layout_marginTop="4dp" />
+
+        <!-- 消息组描述 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="消息组描述(可选)"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="16dp" />
+
+        <EditText
+            android:id="@+id/et_group_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="描述这个消息组的用途"
+            android:inputType="textMultiLine"
+            android:minLines="2"
+            android:maxLines="4"
+            android:gravity="top"
+            android:layout_marginTop="4dp" />
+
+        <!-- 消息数量 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="转发消息数量"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginTop="16dp" />
+
+        <EditText
+            android:id="@+id/et_message_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="从素材库聊天转发最新的N条消息"
+            android:inputType="number"
+            android:maxLines="1"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="提示:将从素材库聊天中转发最新的N条消息"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:layout_marginTop="4dp" />
+
+        <!-- 随机延迟设置 -->
+        <CheckBox
+            android:id="@+id/cb_enable_delay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="启用随机延迟"
+            android:layout_marginTop="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="最小延迟(秒)"
+                    android:textSize="14sp"
+                    android:textColor="#666666" />
+
+                <EditText
+                    android:id="@+id/et_delay_min"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="如:2"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    android:enabled="false"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="最大延迟(秒)"
+                    android:textSize="14sp"
+                    android:textColor="#666666" />
+
+                <EditText
+                    android:id="@+id/et_delay_max"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="如:5"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    android:enabled="false"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="提示:每次转发后随机等待N秒,模拟真人操作"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:layout_marginTop="4dp" />
+
+        <!-- 保存按钮 -->
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="保存"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</ScrollView>
+

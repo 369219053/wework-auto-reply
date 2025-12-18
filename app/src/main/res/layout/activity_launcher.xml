@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="#F5F5F5">
+
+    <!-- 应用标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="企微自动化助手"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:layout_marginBottom="48dp" />
+
+    <!-- 功能一按钮 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:elevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="功能一"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_feature_1"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:text="批量通过好友申请\n并邀请进群"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:background="#4CAF50"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="自动通过好友验证并邀请进指定群聊"
+                android:textSize="12sp"
+                android:textColor="#999999"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- 功能二按钮 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="功能二"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_feature_2"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:text="批量发送消息\n到多个群聊"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:background="#2196F3"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="支持文本、图片、卡片消息批量发送"
+                android:textSize="12sp"
+                android:textColor="#999999"
+                android:layout_marginTop="8dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>
+

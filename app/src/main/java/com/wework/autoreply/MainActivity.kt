@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
@@ -128,21 +130,41 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // 保存群聊名称
+        // 保存群聊名称和启动标志
         configManager.setGroupName(groupName)
 
-        // 发送广播给无障碍服务,开始批量处理
-        val intent = Intent("com.wework.autoreply.START_BATCH_PROCESS")
-        intent.putExtra("groupName", groupName)
-        sendBroadcast(intent)
+        // 设置批量处理标志到SharedPreferences
+        val prefs = getSharedPreferences("wework_auto", MODE_PRIVATE)
+        prefs.edit().apply {
+            putBoolean("should_start_batch", true)
+            putString("target_group_name", groupName)
+            putLong("start_time", System.currentTimeMillis())
+            apply()
+        }
 
-        addLog("📱 已发送批量处理指令")
-        addLog("🚀 正在打开企业微信...")
+        addLog("📱 准备启动企业微信...")
+        Toast.makeText(this, "正在启动企业微信...", Toast.LENGTH_SHORT).show()
 
-        Toast.makeText(this, "批量处理已启动", Toast.LENGTH_SHORT).show()
+        // 直接启动企业微信
+        try {
+            // 使用显式Intent指定启动Activity
+            val launchIntent = Intent().apply {
+                setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
 
-        // 最小化应用到后台
-        moveTaskToBack(true)
+            startActivity(launchIntent)
+            addLog("✅ 企业微信已启动，等待自动化处理...")
+
+            // 延迟500ms后最小化应用
+            Handler(Looper.getMainLooper()).postDelayed({
+                moveTaskToBack(true)
+            }, 500)
+
+        } catch (e: Exception) {
+            addLog("❌ 启动企业微信失败: ${e.message}")
+            Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun addLog(message: String) {
