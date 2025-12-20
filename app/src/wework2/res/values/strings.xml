@@ -1,0 +1,6 @@
+<resources>
+    <!-- Wework2版本专用字符串 -->
+    <string name="app_name">企微自动回复2</string>
+    <string name="wework_target">Ⅱ·企业微信</string>
+</resources>
+

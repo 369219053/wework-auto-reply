@@ -1,0 +1,6 @@
+<resources>
+    <!-- Wework1版本专用字符串 -->
+    <string name="app_name">企微自动回复</string>
+    <string name="wework_target">企业微信</string>
+</resources>
+

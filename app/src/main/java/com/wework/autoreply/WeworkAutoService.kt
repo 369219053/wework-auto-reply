@@ -27,6 +27,7 @@ class WeworkAutoService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var isProcessing = false
     private var targetGroupName = ""
+    private var hasClickedWeworkDialog = false  // 标记是否已点击过双企微弹窗
 
     // 统计数据
     private var approvedCount = 0
@@ -120,8 +121,60 @@ class WeworkAutoService : AccessibilityService() {
         // 强制输出日志到logcat（不依赖TAG）
         android.util.Log.e("WEWORK_DEBUG", "📱 事件: pkg=${event.packageName}, type=${event.eventType}, isProcessing=$isProcessing")
 
-        // 检查是否需要启动批量处理
+        // 🔥 优先处理双企微选择弹窗（同时检查功能一和功能二的SharedPreferences）
+        if (event.packageName == "com.vivo.doubleinstance") {
+            // 检查功能一是否应该启动
+            val prefsAuto = getSharedPreferences("wework_auto", android.content.Context.MODE_PRIVATE)
+            val shouldStartAuto = prefsAuto.getBoolean("should_start", false)
+
+            // 检查功能二是否应该启动
+            val prefsBatch = getSharedPreferences("batch_send", android.content.Context.MODE_PRIVATE)
+            val shouldStartBatch = prefsBatch.getBoolean("should_start", false)
+
+            android.util.Log.e(TAG, "🔍 检测到双企微弹窗! hasClickedWeworkDialog=$hasClickedWeworkDialog, shouldStartAuto=$shouldStartAuto, shouldStartBatch=$shouldStartBatch")
+
+            // 只有其中一个为true时才处理弹窗
+            if (!shouldStartAuto && !shouldStartBatch) {
+                android.util.Log.e(TAG, "⚠️ 两个功能都不需要启动,跳过处理弹窗")
+                return
+            }
+
+            // 🔥 只点击一次,避免重复处理
+            if (hasClickedWeworkDialog) {
+                android.util.Log.e(TAG, "⚠️ 已经点击过弹窗,跳过")
+                return
+            }
+
+            android.util.Log.e(TAG, "🔍 检测到双企微选择弹窗!")
+            sendLog("🔍 检测到双企微选择弹窗!")
+
+            // 获取目标企微
+            val weworkTarget = getString(R.string.wework_target)
+            android.util.Log.e(TAG, "🎯 目标企微: $weworkTarget")
+
+            android.util.Log.e(TAG, "🎯 准备调用clickWeworkByCoordinate()")
+            // 🎯 立即点击,不延迟!
+            clickWeworkByCoordinate(weworkTarget)
+            android.util.Log.e(TAG, "✅ clickWeworkByCoordinate()调用完成")
+
+            // 标记已点击
+            hasClickedWeworkDialog = true
+            android.util.Log.e(TAG, "✅ hasClickedWeworkDialog已设置为true")
+            return
+        }
+
+        // 检查是否需要启动批量处理(只处理功能一,不处理功能二)
         if (!isProcessing && event.packageName == "com.tencent.wework") {
+            // 🔥 检查是否是功能二启动的
+            val prefsBatch = getSharedPreferences("batch_send", android.content.Context.MODE_PRIVATE)
+            val shouldStartBatch = prefsBatch.getBoolean("should_start", false)
+
+            // 如果是功能二,不要处理,让BatchSendService处理
+            if (shouldStartBatch) {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 功能二启动,WeworkAutoService不处理企微事件")
+                return
+            }
+
             android.util.Log.e("WEWORK_DEBUG", "🔍 检测到企业微信，检查是否需要启动批量处理...")
             checkAndStartBatchProcess()
         }
@@ -199,6 +252,7 @@ class WeworkAutoService : AccessibilityService() {
 
         android.util.Log.e("WEWORK_DEBUG", "📍 设置 isProcessing = true")
         isProcessing = true
+        hasClickedWeworkDialog = false  // 🔥 重置弹窗点击标志
         currentState = ProcessState.OPENING_WEWORK
         currentCustomerIndex = 0
         approvedCount = 0
@@ -212,11 +266,9 @@ class WeworkAutoService : AccessibilityService() {
         sendLog("🚀 开始批量处理流程")
         sendLog("📱 目标群聊: $targetGroupName")
 
-        // 企业微信已经打开了，直接开始导航
-        android.util.Log.e("WEWORK_DEBUG", "📍 企业微信已打开，开始导航到通讯录...")
-        handler.postDelayed({
-            navigateToContacts()
-        }, 2000)
+        // 🔥 修复: 调用openWework()打开企业微信
+        android.util.Log.e("WEWORK_DEBUG", "📍 准备打开企业微信...")
+        openWework()
     }
 
     /**
@@ -224,25 +276,183 @@ class WeworkAutoService : AccessibilityService() {
      */
     private fun openWework() {
         try {
+            android.util.Log.e(TAG, "🚀 openWework() 被调用")
+            sendLog("🚀 openWework() 被调用")
+
+            // 获取当前应用的目标企微(从资源文件)
+            val weworkTarget = getString(R.string.wework_target)
+            android.util.Log.e(TAG, "🎯 目标企微: $weworkTarget")
+            sendLog("🎯 目标企微: $weworkTarget")
+
             val intent = packageManager.getLaunchIntentForPackage(WEWORK_PACKAGE)
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
+                android.util.Log.e(TAG, "✅ 已调用startActivity打开企业微信")
                 sendLog("✅ 正在打开企业微信...")
 
-                // 等待应用打开
-                handler.postDelayed({
-                    currentState = ProcessState.NAVIGATING_TO_CONTACTS
-                    navigateToContacts()
-                }, 2000)
+                // 🔥 弹窗会在onAccessibilityEvent中自动处理
+                // 点击成功后会自动调用navigateToContacts
             } else {
+                android.util.Log.e(TAG, "❌ 未找到企业微信应用")
                 sendLog("❌ 未找到企业微信应用")
                 stopProcessing()
             }
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "❌ 打开企业微信失败", e)
             sendLog("❌ 打开企业微信失败: ${e.message}")
             stopProcessing()
         }
+    }
+
+    /**
+     * 🎯 通过resource-id查找并点击企微选项
+     * 适配所有机型,不使用硬编码坐标
+     */
+    private fun clickWeworkByCoordinate(targetWework: String) {
+        try {
+            android.util.Log.e(TAG, "🎯 开始查找并点击企微选项,目标: $targetWework")
+            sendLog("🎯 开始查找并点击: $targetWework")
+
+            val rootNode = rootInActiveWindow ?: run {
+                android.util.Log.e(TAG, "❌ 无法获取窗口信息")
+                return
+            }
+
+            // 🔍 查找目标resource-id
+            val targetResourceId = if (targetWework == "企业微信") {
+                "com.vivo.doubleinstance:id/main"
+            } else {
+                "com.vivo.doubleinstance:id/clone"
+            }
+
+            android.util.Log.e(TAG, "🔍 查找resource-id: $targetResourceId")
+
+            // 递归查找目标节点
+            val targetNode = findNodeByResourceIdRecursive(rootNode, targetResourceId)
+
+            if (targetNode == null) {
+                android.util.Log.e(TAG, "❌ 未找到目标节点: $targetResourceId")
+                sendLog("❌ 未找到目标企微选项")
+                return
+            }
+
+            android.util.Log.e(TAG, "✅ 找到目标节点: $targetResourceId")
+
+            // 获取节点坐标
+            val rect = android.graphics.Rect()
+            targetNode.getBoundsInScreen(rect)
+            val centerX = (rect.left + rect.right) / 2
+            val centerY = (rect.top + rect.bottom) / 2
+
+            android.util.Log.e(TAG, "📍 节点坐标: ($centerX, $centerY), bounds=$rect")
+
+            // 🔥 方案1: 使用performAction点击
+            val clicked = targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            android.util.Log.e(TAG, "🔥 performAction点击结果: $clicked")
+
+            if (clicked) {
+                android.util.Log.e(TAG, "✅ 点击成功!")
+                sendLog("✅ 已自动选择: $targetWework")
+
+                // 🔥 检查是功能一还是功能二
+                val prefsAuto = getSharedPreferences("wework_auto", android.content.Context.MODE_PRIVATE)
+                val shouldStartAuto = prefsAuto.getBoolean("should_start", false)
+
+                // 只有功能一才导航到通讯录,功能二让BatchSendService接管
+                if (shouldStartAuto) {
+                    android.util.Log.e(TAG, "⏰ 功能一启动,3秒后导航到通讯录")
+                    handler.postDelayed({
+                        android.util.Log.e(TAG, "⏰ 3秒延迟结束,开始导航到通讯录")
+                        currentState = ProcessState.NAVIGATING_TO_CONTACTS
+                        navigateToContacts()
+                    }, 3000)
+                } else {
+                    android.util.Log.e(TAG, "⏰ 功能二启动,不导航到通讯录,让BatchSendService接管")
+                }
+            } else {
+                // 🔥 方案2: 使用GestureDescription点击坐标
+                android.util.Log.e(TAG, "⚠️ performAction失败,尝试坐标点击")
+
+                val path = android.graphics.Path()
+                path.moveTo(centerX.toFloat(), centerY.toFloat())
+
+                val gestureBuilder = android.accessibilityservice.GestureDescription.Builder()
+                val strokeDescription = android.accessibilityservice.GestureDescription.StrokeDescription(
+                    path, 0, 100
+                )
+                gestureBuilder.addStroke(strokeDescription)
+
+                val gesture = gestureBuilder.build()
+                val result = dispatchGesture(gesture, object : android.accessibilityservice.AccessibilityService.GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: android.accessibilityservice.GestureDescription?) {
+                        android.util.Log.e(TAG, "✅ 坐标点击成功!")
+                        sendLog("✅ 已自动选择: $targetWework")
+
+                        // 🔥 检查是功能一还是功能二
+                        val prefsAuto = getSharedPreferences("wework_auto", android.content.Context.MODE_PRIVATE)
+                        val shouldStartAuto = prefsAuto.getBoolean("should_start", false)
+
+                        // 只有功能一才导航到通讯录,功能二让BatchSendService接管
+                        if (shouldStartAuto) {
+                            android.util.Log.e(TAG, "⏰ 功能一启动,3秒后导航到通讯录")
+                            handler.postDelayed({
+                                android.util.Log.e(TAG, "⏰ 3秒延迟结束,开始导航到通讯录")
+                                currentState = ProcessState.NAVIGATING_TO_CONTACTS
+                                navigateToContacts()
+                            }, 3000)
+                        } else {
+                            android.util.Log.e(TAG, "⏰ 功能二启动,不导航到通讯录,让BatchSendService接管")
+                        }
+                    }
+
+                    override fun onCancelled(gestureDescription: android.accessibilityservice.GestureDescription?) {
+                        android.util.Log.e(TAG, "❌ 坐标点击被取消")
+                    }
+                }, null)
+
+                if (!result) {
+                    android.util.Log.e(TAG, "❌ dispatchGesture返回false")
+                }
+            }
+
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "❌ 点击失败", e)
+            sendLog("❌ 点击失败: ${e.message}")
+        }
+    }
+
+    /**
+     * 根据resource-id查找所有匹配的节点
+     */
+    /**
+     * 递归查找指定resource-id的节点
+     */
+    private fun findNodeByResourceIdRecursive(node: AccessibilityNodeInfo?, resourceId: String): AccessibilityNodeInfo? {
+        if (node == null) return null
+
+        // 检查当前节点
+        if (node.viewIdResourceName == resourceId) {
+            return node
+        }
+
+        // 递归查找子节点
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val found = findNodeByResourceIdRecursive(child, resourceId)
+            if (found != null) {
+                return found
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * 处理双企微选择弹窗 - 已废弃,使用clickWeworkByCoordinate代替
+     */
+    private fun handleWeworkSelectionDialog(targetWework: String) {
+        // 此方法已废弃
     }
 
     /**
@@ -687,6 +897,7 @@ class WeworkAutoService : AccessibilityService() {
     private fun stopProcessing() {
         isProcessing = false
         currentState = ProcessState.IDLE
+        hasClickedWeworkDialog = false  // 重置弹窗点击标志
         sendLog("⏹️ 批量处理已停止")
     }
 

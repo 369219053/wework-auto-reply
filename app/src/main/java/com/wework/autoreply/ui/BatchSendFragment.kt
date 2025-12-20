@@ -188,8 +188,11 @@ class BatchSendFragment : Fragment() {
         group: GroupConfig,
         chatNames: List<String>
     ) {
+        android.util.Log.e("BatchSendFragment", "🚀 executeBatchSend() 被调用")
+
         // 从数据库读取素材库聊天名称
         lifecycleScope.launch {
+            android.util.Log.e("BatchSendFragment", "🚀 进入lifecycleScope.launch")
             val database = com.wework.autoreply.database.AppDatabase.getDatabase(requireContext())
             val settings = withContext(kotlinx.coroutines.Dispatchers.IO) {
                 database.appSettingsDao().getSettingsSync() ?: com.wework.autoreply.database.AppSettings()
@@ -218,29 +221,41 @@ class BatchSendFragment : Fragment() {
                 putInt("message_count", messageGroup.messageCount)
                 putInt("delay_min", messageGroup.delayMin)
                 putInt("delay_max", messageGroup.delayMax)
-                apply()
+                commit()  // 🔥 使用commit()同步写入,确保立即完成
             }
 
+            android.util.Log.e("BatchSendFragment", "✅ SharedPreferences写入完成")
+
+            android.util.Log.e("BatchSendFragment", "🚀 准备启动企业微信")
             Toast.makeText(requireContext(), "正在启动批量发送...", Toast.LENGTH_SHORT).show()
 
-            // 打开企业微信
-            try {
+            // 🔥 等待500ms,确保SharedPreferences写入完成
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                android.util.Log.e("BatchSendFragment", "🚀 500ms延迟结束,开始启动企微")
+
+                // 打开企业微信
+                try {
+                // 🔥 使用显式Intent启动企业微信
                 val launchIntent = android.content.Intent().apply {
                     setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
-                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
 
+                android.util.Log.e("BatchSendFragment", "🚀 准备调用startActivity")
                 startActivity(launchIntent)
-                Toast.makeText(requireContext(), "企业微信已启动，请确保已启用BatchSendService无障碍服务", Toast.LENGTH_LONG).show()
+                android.util.Log.e("BatchSendFragment", "✅ startActivity调用成功")
+                Toast.makeText(requireContext(), "正在启动批量发送...", Toast.LENGTH_SHORT).show()
 
-                // 延迟500ms后最小化应用
+                // 🔥 延迟500ms后最小化应用,让WeworkAutoService处理弹窗
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     requireActivity().moveTaskToBack(true)
                 }, 500)
 
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                } catch (e: Exception) {
+                    android.util.Log.e("BatchSendFragment", "❌ 启动失败: ${e.message}", e)
+                    Toast.makeText(requireContext(), "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }, 500)
         }
     }
 }

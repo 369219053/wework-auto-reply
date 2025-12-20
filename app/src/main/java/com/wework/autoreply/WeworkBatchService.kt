@@ -130,6 +130,7 @@ class WeworkBatchService : AccessibilityService() {
 
         val approvedCustomers = mutableListOf<String>()
         var processedCount = 0
+        var noNewCustomersCount = 0  // 连续未找到新客户的次数
 
         // 循环处理所有好友申请
         while (true) {
@@ -141,10 +142,32 @@ class WeworkBatchService : AccessibilityService() {
             val viewButtons = AccessibilityHelper.findNodesByText(rootNode, "查看", exact = true)
 
             if (viewButtons.isEmpty()) {
-                sendLogToActivity("✅ 所有好友申请已处理完毕")
-                break
+                // 未找到"查看"按钮,尝试向下滚动
+                sendLogToActivity("⚠️ 当前页面未找到\"查看\"按钮,尝试向下滚动...")
+                val scrollableNode = AccessibilityHelper.findScrollableNode(rootNode)
+                if (scrollableNode != null) {
+                    val scrolled = scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                    if (scrolled) {
+                        sendLogToActivity("📜 向下滚动成功,继续查找...")
+                        AccessibilityHelper.sleep(800)
+                        noNewCustomersCount++
+                        if (noNewCustomersCount >= 3) {
+                            sendLogToActivity("✅ 已滚动到底部,所有好友申请已处理完毕")
+                            break
+                        }
+                        continue
+                    } else {
+                        sendLogToActivity("✅ 已滚动到底部,所有好友申请已处理完毕")
+                        break
+                    }
+                } else {
+                    sendLogToActivity("✅ 所有好友申请已处理完毕")
+                    break
+                }
             }
 
+            // 找到了"查看"按钮,重置计数器
+            noNewCustomersCount = 0
             processedCount++
             sendLogToActivity("🎯 处理第 $processedCount 个好友申请 (剩余 ${viewButtons.size} 个)...")
 
@@ -295,30 +318,81 @@ class WeworkBatchService : AccessibilityService() {
             for ((index, customerName) in uniqueCustomerNames.withIndex()) {
                 sendLogToActivity("  ${index + 1}/${uniqueCustomerNames.size}. 勾选客户: $customerName")
 
-                val customerRoot = rootInActiveWindow
+                // 尝试查找并勾选客户,支持滚动查找
+                var found = false
+                var scrollAttempts = 0
+                val maxScrollAttempts = 10
 
-                // 查找"今天"分组
-                val todayNode = AccessibilityHelper.findNodeByText(customerRoot, "今天", exact = true)
-                val todayBounds = AccessibilityHelper.getNodeBounds(todayNode)
-                val todayY2 = todayBounds?.bottom ?: 0
+                while (!found && scrollAttempts < maxScrollAttempts) {
+                    val customerRoot = rootInActiveWindow
 
-                // 查找下一个分组
-                val nextGroupNode = AccessibilityHelper.findNodeByText(customerRoot, "12-15", exact = false)
-                val nextGroupBounds = AccessibilityHelper.getNodeBounds(nextGroupNode)
-                val nextGroupY1 = nextGroupBounds?.top ?: 9999
+                    // 查找"今天"分组
+                    val todayNode = AccessibilityHelper.findNodeByText(customerRoot, "今天", exact = true)
+                    val todayBounds = AccessibilityHelper.getNodeBounds(todayNode)
+                    val todayY2 = todayBounds?.bottom ?: 0
 
-                // 查找客户名称节点
-                val customerNodes = AccessibilityHelper.findNodesByText(customerRoot, customerName, exact = true)
-                val todayCustomers = AccessibilityHelper.filterNodesByYRange(customerNodes, todayY2, nextGroupY1)
+                    // 查找下一个分组
+                    val nextGroupNode = AccessibilityHelper.findNodeByText(customerRoot, "12-15", exact = false)
+                    val nextGroupBounds = AccessibilityHelper.getNodeBounds(nextGroupNode)
+                    val nextGroupY1 = nextGroupBounds?.top ?: 9999
 
-                if (todayCustomers.isEmpty()) {
+                    // 查找客户名称节点
+                    val customerNodes = AccessibilityHelper.findNodesByText(customerRoot, customerName, exact = true)
+                    val todayCustomers = AccessibilityHelper.filterNodesByYRange(customerNodes, todayY2, nextGroupY1)
+
+                    if (todayCustomers.isNotEmpty()) {
+                        // 找到了客户,点击勾选
+                        found = true
+                        break
+                    }
+
+                    // 未找到,尝试向下滚动
+                    if (scrollAttempts == 0) {
+                        sendLogToActivity("  ⚠️ 当前页面未找到客户,尝试向下滚动...")
+                    }
+
+                    val scrollableNode = AccessibilityHelper.findScrollableNode(customerRoot)
+                    if (scrollableNode != null) {
+                        val scrolled = scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                        if (scrolled) {
+                            scrollAttempts++
+                            AccessibilityHelper.sleep(500)
+                        } else {
+                            // 已滚动到底部
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
+
+                if (!found) {
                     sendLogToActivity("  ❌ 在\"今天\"分组下未找到客户: $customerName")
                     failedCustomers.add(customerName)
                     continue
                 }
 
+                // 找到了客户,重新获取节点并点击勾选
+                val finalCustomerRoot = rootInActiveWindow
+                val finalTodayNode = AccessibilityHelper.findNodeByText(finalCustomerRoot, "今天", exact = true)
+                val finalTodayBounds = AccessibilityHelper.getNodeBounds(finalTodayNode)
+                val finalTodayY2 = finalTodayBounds?.bottom ?: 0
+
+                val finalNextGroupNode = AccessibilityHelper.findNodeByText(finalCustomerRoot, "12-15", exact = false)
+                val finalNextGroupBounds = AccessibilityHelper.getNodeBounds(finalNextGroupNode)
+                val finalNextGroupY1 = finalNextGroupBounds?.top ?: 9999
+
+                val finalCustomerNodes = AccessibilityHelper.findNodesByText(finalCustomerRoot, customerName, exact = true)
+                val finalTodayCustomers = AccessibilityHelper.filterNodesByYRange(finalCustomerNodes, finalTodayY2, finalNextGroupY1)
+
+                if (finalTodayCustomers.isEmpty()) {
+                    sendLogToActivity("  ❌ 重新查找时未找到客户: $customerName")
+                    failedCustomers.add(customerName)
+                    continue
+                }
+
                 // 点击客户名称勾选
-                val customer = todayCustomers.first()
+                val customer = finalTodayCustomers.first()
                 val center = AccessibilityHelper.getNodeCenter(customer)
                 if (center == null) {
                     sendLogToActivity("  ❌ 无法获取客户坐标: $customerName")
@@ -398,20 +472,99 @@ class WeworkBatchService : AccessibilityService() {
 
     /**
      * 打开企业微信APP
+     * 根据应用版本自动选择对应的企微
      */
     private fun openWework() {
         try {
+            // 获取当前应用的目标企微(从BuildConfig或资源文件)
+            val weworkTarget = getString(R.string.wework_target)
+            Log.d(TAG, "目标企微: $weworkTarget")
+
             val intent = packageManager.getLaunchIntentForPackage(WEWORK_PACKAGE)
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 Log.d(TAG, "已打开企业微信")
+
+                // 如果是双企微环境,等待选择弹窗出现并自动点击
+                handler.postDelayed({
+                    handleWeworkSelectionDialog(weworkTarget)
+                }, 1000)
             } else {
                 sendLogToActivity("❌ 未找到企业微信应用")
             }
         } catch (e: Exception) {
             Log.e(TAG, "打开企业微信失败", e)
             sendLogToActivity("❌ 打开企业微信失败: ${e.message}")
+        }
+    }
+
+    /**
+     * 处理双企微选择弹窗
+     */
+    private fun handleWeworkSelectionDialog(targetWework: String) {
+        try {
+            val rootNode = rootInActiveWindow ?: run {
+                Log.d(TAG, "❌ 无法获取窗口信息")
+                return
+            }
+
+            // 查找弹窗标题"选择要使用的应用"
+            val dialogTitle = AccessibilityHelper.findNodeByText(rootNode, "选择要使用的应用", exact = true)
+            if (dialogTitle == null) {
+                Log.d(TAG, "未检测到双企微选择弹窗,可能是单企微环境")
+                return
+            }
+
+            Log.d(TAG, "✅ 检测到双企微选择弹窗,目标: $targetWework")
+            sendLogToActivity("✅ 检测到双企微选择弹窗,目标: $targetWework")
+
+            // 查找目标企微选项(文本节点)
+            val targetTextNode = AccessibilityHelper.findNodeByText(rootNode, targetWework, exact = true)
+            if (targetTextNode != null) {
+                Log.d(TAG, "✅ 找到目标企微文本节点: $targetWework")
+
+                // 查找可点击的父节点(resource-id="com.vivo.doubleinstance:id/main")
+                var clickableNode: AccessibilityNodeInfo? = targetTextNode
+                while (clickableNode != null && !clickableNode.isClickable) {
+                    clickableNode = clickableNode.parent
+                }
+
+                if (clickableNode != null && clickableNode.isClickable) {
+                    Log.d(TAG, "✅ 找到可点击的父节点,准备点击")
+                    val clicked = AccessibilityHelper.clickNode(clickableNode)
+                    if (clicked) {
+                        Log.d(TAG, "✅ 已自动选择: $targetWework")
+                        sendLogToActivity("✅ 已自动选择: $targetWework")
+                    } else {
+                        Log.e(TAG, "❌ performAction点击失败,尝试坐标点击")
+                        // 尝试坐标点击
+                        val rect = android.graphics.Rect()
+                        clickableNode.getBoundsInScreen(rect)
+                        val centerX = (rect.left + rect.right) / 2
+                        val centerY = (rect.top + rect.bottom) / 2
+                        Log.d(TAG, "📍 坐标点击: ($centerX, $centerY)")
+                        AccessibilityHelper.tap(centerX, centerY, 500)
+                        sendLogToActivity("✅ 已自动选择: $targetWework (坐标点击)")
+                    }
+                } else {
+                    Log.e(TAG, "❌ 未找到可点击的父节点,直接使用坐标点击")
+                    // 直接使用文本节点的坐标点击
+                    val rect = android.graphics.Rect()
+                    targetTextNode.getBoundsInScreen(rect)
+                    val centerX = (rect.left + rect.right) / 2
+                    val centerY = (rect.top + rect.bottom) / 2
+                    Log.d(TAG, "📍 坐标点击: ($centerX, $centerY)")
+                    AccessibilityHelper.tap(centerX, centerY, 500)
+                    sendLogToActivity("✅ 已自动选择: $targetWework (坐标点击)")
+                }
+            } else {
+                Log.e(TAG, "❌ 未找到目标企微选项: $targetWework")
+                sendLogToActivity("❌ 未找到目标企微选项: $targetWework")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "处理双企微选择弹窗失败", e)
+            sendLogToActivity("❌ 处理双企微选择弹窗失败: ${e.message}")
         }
     }
     

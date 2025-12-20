@@ -230,5 +230,28 @@ object AccessibilityHelper {
             Thread.sleep(delayMillis)
         }
     }
+
+    /**
+     * 查找可滚动的节点
+     */
+    fun findScrollableNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+
+        // 检查当前节点是否可滚动
+        if (node.isScrollable) {
+            return node
+        }
+
+        // 递归查找子节点
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val scrollableNode = findScrollableNode(child)
+            if (scrollableNode != null) {
+                return scrollableNode
+            }
+        }
+
+        return null
+    }
 }
 

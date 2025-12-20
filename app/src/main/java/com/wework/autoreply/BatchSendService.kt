@@ -26,6 +26,7 @@ class BatchSendService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var isProcessing = false
+    private var hasClickedWeworkDialog = false  // 标记是否已点击过双企微弹窗
 
     // 发送任务参数 - 新的转发模式
     private var materialSourceChat = ""  // 素材库聊天名称
@@ -44,6 +45,7 @@ class BatchSendService : AccessibilityService() {
     // 当前处理状态
     private enum class ProcessState {
         IDLE,                        // 空闲
+        OPENING_WEWORK,              // 打开企业微信
         NAVIGATING_TO_MESSAGES,      // 导航到消息页面
         OPENING_MATERIAL_CHAT,       // 打开素材库聊天
         SCROLLING_TO_BOTTOM,         // 滚动到底部
@@ -104,8 +106,17 @@ class BatchSendService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
+        // 🔥 调试日志
+        if (event.packageName == WEWORK_PACKAGE) {
+            Log.e("BATCH_SEND_DEBUG", "📱 收到企微事件: isProcessing=$isProcessing")
+        }
+
+        // 🔥 不再处理双企微弹窗,让用户手动点击
+        // 直接检查企微事件
+
         // 检查是否需要启动批量发送(和功能一一样的方式)
         if (!isProcessing && event.packageName == WEWORK_PACKAGE) {
+            Log.e("BATCH_SEND_DEBUG", "🔥 准备调用checkAndStartBatchSend()")
             checkAndStartBatchSend()
         }
 
@@ -133,6 +144,10 @@ class BatchSendService : AccessibilityService() {
     private fun checkAndStartBatchSend() {
         val prefs = getSharedPreferences("batch_send", Context.MODE_PRIVATE)
         val shouldStart = prefs.getBoolean("should_start", false)
+        val startTime = prefs.getLong("start_time", 0)
+        val timeDiff = System.currentTimeMillis() - startTime
+
+        Log.e(TAG, "🔍 checkAndStartBatchSend() 被调用, shouldStart=$shouldStart, startTime=$startTime, timeDiff=$timeDiff ms")
 
         if (shouldStart) {
             // 立即清除标志,防止重复启动
@@ -140,6 +155,8 @@ class BatchSendService : AccessibilityService() {
 
             val startTime = prefs.getLong("start_time", 0)
             val timeDiff = System.currentTimeMillis() - startTime
+
+            Log.e(TAG, "🔍 timeDiff=$timeDiff ms")
 
             // 检查是否在10秒内
             if (timeDiff < 10000) {
@@ -164,8 +181,12 @@ class BatchSendService : AccessibilityService() {
                 Log.e(TAG, "📋 目标群聊数量: ${groupChats.size}")
                 Log.e(TAG, "📋 目标群聊列表: $groupChats")
 
+                Log.e(TAG, "🔍 准备调用startBatchSend()")
                 // 开始批量发送
                 startBatchSend()
+                Log.e(TAG, "🔍 startBatchSend()调用完成, isProcessing=$isProcessing")
+            } else {
+                Log.e(TAG, "⚠️ 超时,timeDiff=$timeDiff ms > 10000 ms")
             }
         }
     }
@@ -180,7 +201,8 @@ class BatchSendService : AccessibilityService() {
         }
 
         isProcessing = true
-        currentState = ProcessState.NAVIGATING_TO_MESSAGES
+        hasClickedWeworkDialog = false  // 🔥 重置弹窗点击标志
+        currentState = ProcessState.OPENING_WEWORK
         currentChatIndex = 0
         sentCount = 0
         failedCount = 0
@@ -199,12 +221,8 @@ class BatchSendService : AccessibilityService() {
         sendLog("📊 目标群聊数: ${groupChats.size}")
         updateProgress()
 
-        // 导航到消息页面
-        Log.e(TAG, "⏰ 准备在1秒后导航到消息页面")
-        handler.postDelayed({
-            Log.e(TAG, "⏰ 1秒延迟结束,开始导航")
-            navigateToMessages()
-        }, 1000)
+        // 🔥 先打开企业微信
+        openWework()
     }
 
     /**
@@ -273,9 +291,13 @@ class BatchSendService : AccessibilityService() {
     /**
      * 打开素材库聊天
      */
-    private fun openMaterialChat() {
-        Log.e(TAG, "📚 打开素材库聊天: $materialSourceChat")
-        sendLog("📚 打开素材库聊天: $materialSourceChat")
+    private fun openMaterialChat(scrollAttempts: Int = 0) {
+        if (scrollAttempts == 0) {
+            Log.e(TAG, "📚 打开素材库聊天: $materialSourceChat")
+            sendLog("📚 打开素材库聊天: $materialSourceChat")
+        } else {
+            Log.e(TAG, "🔍 第${scrollAttempts}次滚动后继续查找素材库聊天")
+        }
 
         val rootNode = rootInActiveWindow ?: run {
             Log.e(TAG, "❌ 无法获取窗口信息")
@@ -299,10 +321,34 @@ class BatchSendService : AccessibilityService() {
                 selectMessages()
             }, 1500)
         } else {
-            Log.e(TAG, "❌ 未找到素材库聊天: $materialSourceChat")
-            sendLog("❌ 未找到素材库聊天: $materialSourceChat")
-            Toast.makeText(this, "❌ 未找到素材库聊天,请检查设置", Toast.LENGTH_LONG).show()
-            stopBatchSend()
+            // 未找到素材库聊天,尝试向下滚动
+            Log.e(TAG, "⚠️ 未找到素材库聊天,尝试向下滚动查找")
+
+            val scrollableNode = findScrollableNode(rootNode)
+            if (scrollableNode != null) {
+                val scrolled = scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+
+                if (scrolled) {
+                    Log.e(TAG, "📜 滚动成功,等待后继续查找")
+                    sendLog("📜 向下滚动查找素材库聊天...")
+                    // 等待滚动完成后继续查找
+                    handler.postDelayed({
+                        openMaterialChat(scrollAttempts + 1)
+                    }, 500)
+                } else {
+                    // 已滚动到底部,仍未找到
+                    Log.e(TAG, "❌ 已滚动到底部,仍未找到素材库聊天: $materialSourceChat")
+                    sendLog("❌ 未找到素材库聊天: $materialSourceChat")
+                    Toast.makeText(this, "❌ 未找到素材库聊天,请检查设置", Toast.LENGTH_LONG).show()
+                    stopBatchSend()
+                }
+            } else {
+                // 找不到可滚动节点
+                Log.e(TAG, "❌ 未找到素材库聊天且无法滚动: $materialSourceChat")
+                sendLog("❌ 未找到素材库聊天: $materialSourceChat")
+                Toast.makeText(this, "❌ 未找到素材库聊天,请检查设置", Toast.LENGTH_LONG).show()
+                stopBatchSend()
+            }
         }
     }
 
@@ -322,38 +368,13 @@ class BatchSendService : AccessibilityService() {
 
         Log.e(TAG, "✅ rootNode获取成功")
 
-        // 步骤1: 滚动到底部(最新消息)
-        Log.e(TAG, "📜 滚动到底部")
-        sendLog("📜 滚动到底部")
-
-        // 查找RecyclerView或ListView
-        val scrollableNode = findScrollableNode(rootNode)
-        if (scrollableNode != null) {
-            Log.e(TAG, "✅ 找到可滚动节点,执行多次滚动到底部")
-            // 执行多次滚动到底部的操作,确保加载所有消息
-            scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-            handler.postDelayed({
-                scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-            }, 200)
-            handler.postDelayed({
-                scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-            }, 400)
-            handler.postDelayed({
-                scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-            }, 600)
-            handler.postDelayed({
-                scrollableNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-            }, 800)
-        } else {
-            Log.e(TAG, "⚠️ 未找到可滚动节点")
-        }
-
-        // 等待滚动完成后,直接长按最后一条消息(不要先滚动!)
-        Log.e(TAG, "⏰ 准备在1.5秒后长按最后一条消息")
+        // 🔥 直接长按最后一条消息,不需要滚动
+        // 因为打开聊天后默认就在最新消息位置
+        Log.e(TAG, "⏰ 准备在500ms后长按最后一条消息")
         handler.postDelayed({
-            Log.e(TAG, "⏰ 1.5秒延迟结束,调用longPressLastMessage()")
+            Log.e(TAG, "⏰ 500ms延迟结束,调用longPressLastMessage()")
             longPressLastMessage()
-        }, 1500)
+        }, 500)
     }
 
     /**
@@ -487,12 +508,13 @@ class BatchSendService : AccessibilityService() {
         if (node == null) return result
 
         // 查找所有可长按的消息节点
-        // 包括: ih3, hxd (消息内容), k2j (卡片消息中的图片)
+        // 包括: ih3, hxd (消息内容), k2j (卡片消息中的图片), hwl (自己发的消息)
         val resourceId = node.viewIdResourceName
         if (node.isLongClickable &&
-            (resourceId == "com.tencent.wework:id/hxd" ||   // 文字消息
+            (resourceId == "com.tencent.wework:id/hxd" ||   // 文字消息(别人发的)
              resourceId == "com.tencent.wework:id/ih3" ||   // 卡片消息(LinearLayout)
-             resourceId == "com.tencent.wework:id/k2j")) {  // 卡片消息中的图片(ImageView)
+             resourceId == "com.tencent.wework:id/k2j" ||   // 卡片消息中的图片(ImageView)
+             resourceId == "com.tencent.wework:id/hwl")) {  // 🔥 自己发的消息(LinearLayout)
             result.add(node)
         }
 
@@ -1207,6 +1229,7 @@ class BatchSendService : AccessibilityService() {
 
         currentState = ProcessState.IDLE
         isProcessing = false
+        hasClickedWeworkDialog = false  // 重置弹窗点击标志
 
         // 更新数据库状态
         updateFinalStatus()
@@ -1218,6 +1241,7 @@ class BatchSendService : AccessibilityService() {
     private fun stopProcessing() {
         isProcessing = false
         currentState = ProcessState.IDLE
+        hasClickedWeworkDialog = false  // 重置弹窗点击标志
         sendLog("⏹️ 批量发送已停止")
     }
 
@@ -1526,6 +1550,109 @@ class BatchSendService : AccessibilityService() {
         }
 
         return false
+    }
+
+    /**
+     * 打开企业微信应用
+     */
+    private fun openWework() {
+        try {
+            Log.e(TAG, "🚀 openWework() 被调用")
+            sendLog("🚀 正在打开企业微信...")
+
+            // 🔥 企微已经打开了,不需要再次启动!直接导航到消息页面!
+            Log.e(TAG, "✅ 企微已经打开,直接导航到消息页面")
+            currentState = ProcessState.NAVIGATING_TO_MESSAGES
+
+            // 🔥 延迟1秒后导航,确保企微完全打开
+            handler.postDelayed({
+                navigateToMessages()
+            }, 1000)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 打开企业微信失败", e)
+            sendLog("❌ 打开企业微信失败: ${e.message}")
+            stopProcessing()
+        }
+    }
+
+    /**
+     * 🎯 通过resource-id查找并点击企微选项
+     */
+    private fun clickWeworkByResourceId(targetWework: String) {
+        try {
+            Log.e(TAG, "🎯 开始查找并点击企微选项,目标: $targetWework")
+            sendLog("🎯 开始查找并点击: $targetWework")
+
+            val rootNode = rootInActiveWindow ?: run {
+                Log.e(TAG, "❌ 无法获取窗口信息")
+                return
+            }
+
+            // 🔍 查找目标resource-id
+            val targetResourceId = if (targetWework == "企业微信") {
+                "com.vivo.doubleinstance:id/main"
+            } else {
+                "com.vivo.doubleinstance:id/clone"
+            }
+
+            Log.e(TAG, "🔍 查找resource-id: $targetResourceId")
+
+            // 递归查找目标节点
+            val targetNode = findNodeByResourceIdRecursive(rootNode, targetResourceId)
+
+            if (targetNode == null) {
+                Log.e(TAG, "❌ 未找到目标节点: $targetResourceId")
+                sendLog("❌ 未找到目标企微选项")
+                return
+            }
+
+            Log.e(TAG, "✅ 找到目标节点: $targetResourceId")
+
+            // 🔥 使用performAction点击
+            val clicked = targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            Log.e(TAG, "🔥 performAction点击结果: $clicked")
+
+            if (clicked) {
+                Log.e(TAG, "✅ 点击成功!")
+                sendLog("✅ 已自动选择: $targetWework")
+
+                // 🔥 点击成功后,等待3秒让企微打开,然后导航到消息页面
+                handler.postDelayed({
+                    Log.e(TAG, "⏰ 3秒延迟结束,开始导航到消息页面")
+                    currentState = ProcessState.NAVIGATING_TO_MESSAGES
+                    navigateToMessages()
+                }, 3000)
+            } else {
+                Log.e(TAG, "⚠️ performAction失败")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 点击失败", e)
+            sendLog("❌ 点击失败: ${e.message}")
+        }
+    }
+
+    /**
+     * 递归查找指定resource-id的节点
+     */
+    private fun findNodeByResourceIdRecursive(node: AccessibilityNodeInfo?, resourceId: String): AccessibilityNodeInfo? {
+        if (node == null) return null
+
+        // 检查当前节点
+        if (node.viewIdResourceName == resourceId) {
+            return node
+        }
+
+        // 递归查找子节点
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val found = findNodeByResourceIdRecursive(child, resourceId)
+            if (found != null) {
+                return found
+            }
+        }
+
+        return null
     }
 
     /**

@@ -18,6 +18,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Product Flavors - 支持双企微
+    flavorDimensions += "wework"
+    productFlavors {
+        create("wework1") {
+            dimension = "wework"
+            applicationId = "com.wework.autoreply"
+            versionNameSuffix = "-wework1"
+            resValue("string", "app_name", "企微自动回复")
+            resValue("string", "wework_target", "企业微信")
+        }
+        create("wework2") {
+            dimension = "wework"
+            applicationId = "com.wework.autoreply.second"
+            versionNameSuffix = "-wework2"
+            resValue("string", "app_name", "企微自动回复2")
+            resValue("string", "wework_target", "Ⅱ·企业微信")
+        }
+    }
+
     buildTypes {
         debug {
             // Debug版本使用Android默认的debug签名,无需手动配置

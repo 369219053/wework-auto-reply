@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.wework.autoreply.MessageGroupDetailActivity
+// import com.wework.autoreply.MessageGroupDetailActivity
 import com.wework.autoreply.R
 import com.wework.autoreply.ui.adapter.MessageGroupAdapter
 import com.wework.autoreply.viewmodel.MessageGroupViewModel
@@ -51,15 +51,15 @@ class MessageGroupFragment : Fragment() {
         adapter = MessageGroupAdapter(
             onItemClick = { group ->
                 // 点击查看详情
-                val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
-                intent.putExtra("GROUP_ID", group.id)
-                startActivity(intent)
+                // val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
+                // intent.putExtra("GROUP_ID", group.id)
+                // startActivity(intent)
             },
             onEditClick = { group ->
                 // 点击编辑
-                val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
-                intent.putExtra("GROUP_ID", group.id)
-                startActivity(intent)
+                // val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
+                // intent.putExtra("GROUP_ID", group.id)
+                // startActivity(intent)
             },
             onDeleteClick = { group ->
                 // 删除消息组
@@ -88,8 +88,8 @@ class MessageGroupFragment : Fragment() {
 
         // FAB点击事件 - 创建新消息组
         fab.setOnClickListener {
-            val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
-            startActivity(intent)
+            // val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
+            // startActivity(intent)
         }
     }
 

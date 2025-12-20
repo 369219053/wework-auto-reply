@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业微信自动化应用 - 使用教程</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 25px;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            color: #666;
+            margin-top: 15px;
+        }
+        
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            page-break-inside: avoid;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+        
+        strong {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            
+            pre, table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+<p><h1>企业微信自动化应用 - 使用教程</h1></p><p><strong>版本</strong>: V3.0  
+<strong>更新日期</strong>: 2025-12-19  
+<strong>适用系统</strong>: Android 7.0+</p><hr><p><h2>📋 目录</h2></p><p>1. [项目简介](#项目简介)
+2. [核心功能](#核心功能)
+3. [系统要求](#系统要求)
+4. [安装步骤](#安装步骤)
+5. [权限配置](#权限配置)
+6. [使用方法](#使用方法)
+7. [常见问题](#常见问题)
+8. [注意事项](#注意事项)</p><hr><p><h2>📖 项目简介</h2></p><p>企业微信自动化应用是一款基于Android无障碍服务开发的自动化工具,帮助企业高效管理客户关系。</p><p><h3>应用特点</h3></p><p><ul><li>✅ <strong>纯手机端运行</strong> - 无需电脑,手机独立完成所有操作</li>
+<li>✅ <strong>一键执行</strong> - 点击按钮即可完成批量操作</li>
+<li>✅ <strong>智能识别</strong> - 自动识别UI元素,适配不同版本</li>
+<li>✅ <strong>安全可靠</strong> - 本地运行,不上传任何数据</li>
+</ul>
+---</p><p><h2>✨ 核心功能</h2></p><p><h3>功能一: 批量通过好友申请并邀请进群</h3></p><p><strong>适用场景</strong>: 企业客服、社群运营、私域流量管理</p><p><strong>功能流程</strong>:
+<pre><code>
+1. 自动批量通过所有好友申请
+2. 记录所有新添加的客户名称
+3. 自动将所有新客户邀请到指定群聊
+4. 显示操作结果统计
+</code></pre></p><p><strong>操作步骤</strong>:
+1. 打开应用,点击"功能一"标签
+2. 输入目标群聊名称(例如: <code>智界Aigc客户群</code>)
+3. 点击"开始批量处理"按钮
+4. 应用自动执行,完成后显示统计结果</p><p><strong>预期结果</strong>:
+<ul><li>✅ 所有好友申请已通过</li>
+<li>✅ 所有新客户已加入群聊</li>
+<li>✅ 显示成功/失败统计</li>
+</ul>
+---</p><p><h3>功能二: 批量发送消息</h3></p><p><strong>适用场景</strong>: 群发通知、营销推广、客户维护</p><p><strong>功能流程</strong>:
+<pre><code>
+1. 从素材库聊天选择要转发的消息
+2. 自动转发到多个群聊/联系人
+3. 支持文本、图片、卡片等多种消息类型
+4. 智能滚动查找不可见的联系人
+</code></pre></p><p><strong>操作步骤</strong>:
+1. 打开应用,点击"功能二"标签
+2. 点击"设置"配置素材库聊天名称
+3. 创建消息组,添加目标群聊/联系人
+4. 设置转发消息数量和延迟时间
+5. 点击"开始发送"按钮
+6. 应用自动执行,完成后显示统计结果</p><p><strong>预期结果</strong>:
+<ul><li>✅ 消息已发送到所有目标群聊</li>
+<li>✅ 显示成功/失败统计</li>
+</ul>
+---</p><p><h2>💻 系统要求</h2></p><p><h3>必须满足</h3></p><p><ul><li>✅ <strong>操作系统</strong>: Android 7.0 (API 24) 及以上</li>
+<li>✅ <strong>企业微信</strong>: 已安装并登录</li>
+<li>✅ <strong>存储空间</strong>: 至少50MB可用空间</li>
+<li>✅ <strong>网络连接</strong>: 稳定的网络环境</li>
+</ul>
+<h3>推荐配置</h3></p><p><ul><li>✅ <strong>操作系统</strong>: Android 9.0 及以上</li>
+<li>✅ <strong>内存</strong>: 4GB及以上</li>
+<li>✅ <strong>电量</strong>: 保持50%以上电量</li>
+</ul>
+<h3>支持的手机品牌</h3></p><p><td>品牌</td> 适配性 <td>说明</td>
+<td>------</td>--------<td>------</td>
+<td>小米/红米</td> ⭐⭐⭐⭐⭐ <td>完美支持</td>
+<td>华为/荣耀</td> ⭐⭐⭐⭐ <td>需要额外配置</td>
+<td>OPPO/Vivo</td> ⭐⭐⭐⭐ <td>需要关闭电池优化</td>
+<td>三星</td> ⭐⭐⭐⭐⭐ <td>完美支持</td>
+<td>一加</td> ⭐⭐⭐⭐⭐ <td>完美支持</td></p><hr><p><h2>📦 安装步骤</h2></p><p><h3>步骤1: 获取APK文件</h3></p><p><strong>方法A: 从开发者获取</strong>
+<ul><li>联系开发者获取最新版APK文件</li>
+<li>通过微信/QQ接收APK文件</li>
+</ul>
+<strong>方法B: 从GitHub下载</strong>
+<ul><li>访问项目GitHub仓库</li>
+<li>进入Releases页面</li>
+<li>下载最新版APK文件</li>
+</ul>
+<h3>步骤2: 安装APK</h3></p><p>1. <strong>允许安装未知来源应用</strong>
+   - 打开手机"设置"
+   - 搜索"安装未知应用"
+   - 找到"文件管理器"或"浏览器"
+   - 开启"允许安装未知应用"</p><p>2. <strong>安装APK文件</strong>
+   - 找到下载的APK文件
+   - 点击APK文件
+   - 点击"安装"按钮
+   - 等待安装完成</p><p>3. <strong>打开应用</strong>
+   - 安装完成后点击"打开"
+   - 或在桌面找到"企微自动回复"图标</p><p><h3>步骤3: 授予必要权限</h3></p><p><strong>无障碍服务权限(必须)</strong></p><p>这是应用的核心权限,用于自动操作企业微信。</p><p><strong>开启方法</strong>:
+<pre><code>
+方法1(推荐):
+应用内提示 → 点击"去设置" → 找到"企微自动回复" → 开启</p><p>方法2:
+手机设置 → 无障碍 → 已下载的应用 → 企微自动回复 → 开启
+</code></pre></p><p><strong>其他权限</strong>:
+<ul><li>✅ 存储权限 - 用于保存数据</li>
+<li>✅ 通知权限 - 用于显示操作进度</li>
+</ul>
+---</p><p><h2>🔧 权限配置</h2></p><p>不同品牌手机需要额外配置,确保应用能在后台正常运行。</p><p><h3>小米/红米 (MIUI)</h3></p><p><strong>1. 关闭MIUI优化</strong>
+<pre><code>
+设置 → 更多设置 → 开发者选项 → 关闭"MIUI优化"
+</code></pre></p><p><strong>2. 允许后台运行</strong>
+<pre><code>
+设置 → 应用设置 → 应用管理 → 企微自动回复
+→ 省电策略 → 无限制
+</code></pre></p><p><strong>3. 自启动权限</strong>
+<pre><code>
+设置 → 应用设置 → 应用管理 → 企微自动回复
+→ 自启动 → 开启
+</code></pre></p><p><h3>华为/荣耀 (EMUI/HarmonyOS)</h3></p><p><strong>1. 加入受保护应用</strong>
+<pre><code>
+设置 → 电池 → 应用启动管理 → 企微自动回复
+→ 手动管理 → 全部允许
+</code></pre></p><p><strong>2. 关闭电池优化</strong>
+<pre><code>
+设置 → 电池 → 更多电池设置 → 休眠时始终保持网络连接
+</code></pre></p><p><h3>OPPO/Vivo (ColorOS/OriginOS)</h3></p><p><strong>1. 关闭电池优化</strong>
+<pre><code>
+设置 → 电池 → 更多 → 耗电保护 → 企微自动回复 → 关闭
+</code></pre></p><p><strong>2. 允许后台运行</strong>
+<pre><code>
+设置 → 应用管理 → 企微自动回复 → 电池 → 后台冻结 → 关闭
+</code></pre></p><p><h3>三星 (OneUI)</h3></p><p><strong>1. 关闭电池优化</strong>
+<pre><code>
+设置 → 应用程序 → 企微自动回复 → 电池 → 优化电池使用 → 关闭
+</code></pre></p><hr><p><h2>📱 使用方法</h2></p><p><h3>功能一: 批量通过好友申请并邀请进群</h3></p><p><h4>准备工作</h4></p><p>1. <strong>确保有待处理的好友申请</strong>
+   - 打开企业微信
+   - 点击"通讯录"标签
+   - 查看"新的客户"是否有待处理申请</p><p>2. <strong>准备目标群聊</strong>
+   - 确认群聊名称(例如: <code>智界Aigc客户群</code>)
+   - 确保您是群主或有邀请权限</p><p><h4>操作步骤</h4></p><p><strong>第1步: 打开应用</strong>
+<ul><li>在桌面找到"企微自动回复"图标</li>
+<li>点击打开应用</li>
+</ul>
+<strong>第2步: 选择功能一</strong>
+<ul><li>点击底部"功能一"标签</li>
+<li>进入批量处理页面</li>
+</ul>
+<strong>第3步: 输入群聊名称</strong>
+<ul><li>在输入框中输入目标群聊名称</li>
+<li>例如: <code>智界Aigc客户群</code></li>
+<li>注意: 只需输入群聊名称,不需要包含人数</li>
+</ul>
+<strong>第4步: 开始执行</strong>
+<ul><li>点击"开始批量处理"按钮</li>
+<li>应用会自动最小化并打开企业微信</li>
+<li>自动执行以下操作:</li>
+</ul>  - ✅ 批量通过所有好友申请
+  - ✅ 记录所有新客户名称
+  - ✅ 批量邀请到指定群聊</p><p><strong>第5步: 查看结果</strong>
+<ul><li>执行完成后,应用会自动返回</li>
+<li>显示操作结果统计:</li>
+</ul>  - 成功通过: X人
+  - 成功邀请: X人
+  - 失败: X人</p><p><h4>注意事项</h4></p><p><ul><li>⚠️ 执行过程中请勿操作手机</li>
+<li>⚠️ 确保手机屏幕保持亮屏</li>
+<li>⚠️ 确保网络连接稳定</li>
+<li>⚠️ 如果中途失败,可以重新执行</li>
+</ul>
+---</p><p><h3>功能二: 批量发送消息</h3></p><p><h4>准备工作</h4></p><p>1. <strong>准备素材库聊天</strong>
+   - 创建一个专门的聊天(可以是个人聊天或群聊)
+   - 在这个聊天中准备好要发送的消息
+   - 记住这个聊天的名称</p><p>2. <strong>准备目标群聊/联系人列表</strong>
+   - 确认要发送消息的群聊/联系人名称
+   - 确保名称准确无误</p><p><h4>操作步骤</h4></p><p><strong>第1步: 配置素材库聊天</strong>
+<ul><li>打开应用,点击"功能二"标签</li>
+<li>点击右上角"设置"图标</li>
+<li>输入素材库聊天名称</li>
+<li>点击"保存"</li>
+</ul>
+<strong>第2步: 创建消息组</strong>
+<ul><li>点击"消息组管理"</li>
+<li>点击"+"创建新消息组</li>
+<li>输入消息组名称(例如: <code>每日推送</code>)</li>
+<li>输入描述信息</li>
+<li>设置转发消息数量(例如: 7条)</li>
+<li>设置延迟时间范围(例如: 2-5秒)</li>
+<li>点击"保存"</li>
+</ul>
+<strong>第3步: 添加目标群聊</strong>
+<ul><li>进入刚创建的消息组</li>
+<li>点击"添加群聊"</li>
+<li>输入群聊/联系人名称</li>
+<li>点击"添加"</li>
+<li>重复此步骤添加所有目标</li>
+</ul>
+<strong>第4步: 开始发送</strong>
+<ul><li>确保企业微信已打开</li>
+<li>确保素材库聊天中有足够的消息</li>
+<li>点击"开始发送"按钮</li>
+<li>应用会自动执行:</li>
+</ul>  - ✅ 打开素材库聊天
+  - ✅ 选择最新的N条消息
+  - ✅ 转发到所有目标群聊
+  - ✅ 自动添加随机延迟</p><p><strong>第5步: 查看结果</strong>
+<ul><li>执行完成后显示统计:</li>
+</ul>  - 成功发送: X个群聊
+  - 失败: X个群聊
+  - 失败列表: [群聊名称]</p><p><h4>高级功能</h4></p><p><strong>智能滚动查找</strong>
+<ul><li>如果目标联系人不在当前页面</li>
+<li>应用会自动向下滚动查找</li>
+<li>直到找到或滚动到底部</li>
+</ul>
+<strong>全角/半角智能匹配</strong>
+<ul><li>自动处理字符编码差异</li>
+<li>例如: <code>天天一泉~小石榴</code> 和 <code>天天一泉～小石榴</code> 都能匹配</li>
+</ul>
+<strong>随机延迟</strong>
+<ul><li>模拟真人操作</li>
+<li>避免被检测为机器人</li>
+<li>可自定义延迟范围</li>
+</ul>
+---</p><p><h2>❓ 常见问题</h2></p><p><h3>Q1: 安装时提示"未知来源"怎么办?</h3></p><p><strong>A</strong>: 需要允许安装未知来源应用
+<pre><code>
+设置 → 安全 → 未知来源 → 允许
+或
+设置 → 应用管理 → 特殊权限 → 安装未知应用 → 文件管理器 → 允许
+</code></pre></p><p><h3>Q2: 无障碍服务开启后自动关闭?</h3></p><p><strong>A</strong>: 这是部分手机的电池优化导致的
+<pre><code>
+解决方法:
+1. 关闭应用的电池优化
+2. 加入自启动白名单
+3. 允许后台运行
+</code></pre></p><p><h3>Q3: 执行过程中卡住不动?</h3></p><p><strong>A</strong>: 可能的原因和解决方法
+<pre><code>
+原因1: 网络不稳定
+解决: 检查网络连接,切换到稳定的WiFi</p><p>原因2: 企业微信版本不兼容
+解决: 更新企业微信到最新版本</p><p>原因3: 无障碍服务被关闭
+解决: 重新开启无障碍服务</p><p>原因4: 手机性能不足
+解决: 关闭其他应用,释放内存
+</code></pre></p><p><h3>Q4: 找不到目标群聊/联系人?</h3></p><p><strong>A</strong>: 检查以下几点
+<pre><code>
+1. 名称是否完全一致(包括空格、标点符号)
+2. 群聊是否在消息列表中(需要有聊天记录)
+3. 尝试手动滚动到群聊位置,确认名称
+4. 应用会自动滚动查找,请耐心等待
+</code></pre></p><p><h3>Q5: 部分消息发送失败?</h3></p><p><strong>A</strong>: 可能的原因
+<pre><code>
+原因1: 目标群聊不存在或已解散
+解决: 检查群聊是否存在</p><p>原因2: 没有发送权限(被禁言)
+解决: 检查群聊权限</p><p>原因3: 网络超时
+解决: 增加延迟时间,重新发送
+</code></pre></p><p><h3>Q6: 会被企业微信检测封号吗?</h3></p><p><strong>A</strong>: 风险较低,但需要注意
+<pre><code>
+建议:
+1. 设置合理的延迟时间(2-5秒)
+2. 避免频繁操作
+3. 不要短时间大量发送
+4. 模拟真人操作习惯
+</code></pre></p><p><h3>Q7: 耗电量大吗?</h3></p><p><strong>A</strong>: 正常情况下耗电很少
+<pre><code>
+<ul><li>应用只在执行任务时运行</li>
+<li>执行完成后自动停止</li>
+<li>不会常驻后台</li>
+<li>几乎不影响续航</li>
+</ul></code></pre></p><p><h3>Q8: 可以在后台运行吗?</h3></p><p><strong>A</strong>: 可以,但需要配置
+<pre><code>
+1. 关闭电池优化
+2. 允许后台运行
+3. 加入自启动白名单
+4. 执行时保持屏幕亮屏(推荐)
+</code></pre></p><p><h3>Q9: 支持多个企业微信账号吗?</h3></p><p><strong>A</strong>: 目前只支持当前登录的账号
+<pre><code>
+如需切换账号:
+1. 退出当前企业微信账号
+2. 登录新账号
+3. 重新执行操作
+</code></pre></p><p><h3>Q10: 如何更新应用?</h3></p><p><strong>A</strong>: 获取新版APK重新安装
+<pre><code>
+1. 下载最新版APK
+2. 直接安装(会覆盖旧版)
+3. 数据会保留
+4. 无需卸载旧版
+</code></pre></p><hr><p><h2>⚠️ 注意事项</h2></p><p><h3>使用前必读</h3></p><p>1. <strong>确保无障碍服务已开启</strong>
+   - 这是应用的核心权限
+   - 未开启将无法使用</p><p>2. <strong>执行时请勿操作手机</strong>
+   - 避免干扰自动化流程
+   - 可能导致执行失败</p><p>3. <strong>保持屏幕亮屏</strong>
+   - 部分手机锁屏后无障碍服务会暂停
+   - 建议执行时保持屏幕常亮</p><p>4. <strong>确保网络稳定</strong>
+   - 网络不稳定可能导致操作失败
+   - 推荐使用WiFi</p><p><h3>安全建议</h3></p><p>1. <strong>合理使用自动化功能</strong>
+   - 不要过度频繁使用
+   - 避免被企业微信检测</p><p>2. <strong>设置合理的延迟时间</strong>
+   - 模拟真人操作
+   - 建议2-5秒随机延迟</p><p>3. <strong>定期检查执行结果</strong>
+   - 确认消息是否发送成功
+   - 及时处理失败的情况</p><p>4. <strong>备份重要数据</strong>
+   - 定期导出消息组配置
+   - 避免数据丢失</p><p><h3>法律声明</h3></p><p>1. <strong>本应用仅供学习交流使用</strong>
+2. <strong>请遵守企业微信使用规范</strong>
+3. <strong>不得用于违法违规用途</strong>
+4. <strong>使用本应用产生的后果由用户自行承担</strong></p><hr><p><h2>📞 技术支持</h2></p><p><h3>遇到问题?</h3></p><p>1. <strong>查看常见问题</strong> - 大部分问题都能在FAQ中找到答案
+2. <strong>查看日志</strong> - 应用内有详细的操作日志
+3. <strong>联系开发者</strong> - 提供详细的错误信息和截图</p><p><h3>反馈建议</h3></p><p>如果您有任何建议或发现bug,欢迎反馈!</p><hr><p><h2>📝 更新日志</h2></p><p><h3>V3.0 (2025-12-19)</h3></p><p><strong>新增功能:</strong>
+<ul><li>✅ 批量发送消息功能</li>
+<li>✅ 智能滚动查找联系人</li>
+<li>✅ 全角/半角字符智能匹配</li>
+<li>✅ 发送按钮双重点击策略</li>
+<li>✅ 多选模式智能滚动</li>
+</ul>
+<strong>优化改进:</strong>
+<ul><li>✅ 优化UI界面</li>
+<li>✅ 完善错误处理</li>
+<li>✅ 增加详细日志</li>
+<li>✅ 提升稳定性</li>
+</ul>
+<h3>V2.0 (2025-11-XX)</h3></p><p><strong>新增功能:</strong>
+<ul><li>✅ 批量通过好友申请</li>
+<li>✅ 批量邀请进群</li>
+<li>✅ 智能识别UI元素</li>
+</ul>
+<h3>V1.0 (2025-10-XX)</h3></p><p><strong>初始版本:</strong>
+<ul><li>✅ 基础自动化功能</li>
+<li>✅ 无障碍服务支持</li>
+</ul>
+---</p><p><h2>🎓 结语</h2></p><p>感谢您使用企业微信自动化应用!</p><p>本应用旨在帮助企业提高工作效率,节省人力成本。</p><p>如果您觉得本应用有用,欢迎推荐给更多朋友使用!</p><p><strong>祝您使用愉快!</strong> 🎉</p><hr><p><strong>文档版本</strong>: V1.0
+<strong>最后更新</strong>: 2025-12-19
+<strong>作者</strong>: 小牛马
+<strong>版权所有</strong> © 2025</p><p></p>
+</body>
+</html>
