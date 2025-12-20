@@ -248,7 +248,9 @@ class BatchSendFragment : Fragment() {
 
                 // 🔥 延迟500ms后最小化应用,让WeworkAutoService处理弹窗
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    android.util.Log.e("BatchSendFragment", "⏰ 500ms延迟结束,准备最小化应用")
                     requireActivity().moveTaskToBack(true)
+                    android.util.Log.e("BatchSendFragment", "✅ moveTaskToBack调用完成")
                 }, 500)
 
                 } catch (e: Exception) {

@@ -136,35 +136,45 @@ class MainActivity : AppCompatActivity() {
         // 设置批量处理标志到SharedPreferences
         val prefs = getSharedPreferences("wework_auto", MODE_PRIVATE)
         prefs.edit().apply {
-            putBoolean("should_start_batch", true)
+            putBoolean("should_start", true)  // 🔥 修复: 使用正确的键名
             putString("target_group_name", groupName)
             putLong("start_time", System.currentTimeMillis())
-            apply()
+            commit()  // 🔥 使用commit()同步写入
         }
+
+        android.util.Log.e("MainActivity", "✅ SharedPreferences写入完成: should_start=true, groupName=$groupName")
 
         addLog("📱 准备启动企业微信...")
         Toast.makeText(this, "正在启动企业微信...", Toast.LENGTH_SHORT).show()
 
-        // 直接启动企业微信
-        try {
-            // 使用显式Intent指定启动Activity
-            val launchIntent = Intent().apply {
-                setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // 🔥 延迟500ms后启动企微,确保SharedPreferences写入完成
+        Handler(Looper.getMainLooper()).postDelayed({
+            // 直接启动企业微信
+            try {
+                // 使用显式Intent指定启动Activity
+                val launchIntent = Intent().apply {
+                    setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+
+                android.util.Log.e("MainActivity", "🚀 准备调用startActivity")
+                startActivity(launchIntent)
+                android.util.Log.e("MainActivity", "✅ startActivity调用成功")
+                addLog("✅ 企业微信已启动，等待自动化处理...")
+
+                // 延迟500ms后最小化应用,让WeworkAutoService处理弹窗
+                Handler(Looper.getMainLooper()).postDelayed({
+                    android.util.Log.e("MainActivity", "⏰ 500ms延迟结束,准备最小化应用")
+                    moveTaskToBack(true)
+                    android.util.Log.e("MainActivity", "✅ moveTaskToBack调用完成")
+                }, 500)
+
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "❌ 启动失败: ${e.message}", e)
+                addLog("❌ 启动企业微信失败: ${e.message}")
+                Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-
-            startActivity(launchIntent)
-            addLog("✅ 企业微信已启动，等待自动化处理...")
-
-            // 延迟500ms后最小化应用
-            Handler(Looper.getMainLooper()).postDelayed({
-                moveTaskToBack(true)
-            }, 500)
-
-        } catch (e: Exception) {
-            addLog("❌ 启动企业微信失败: ${e.message}")
-            Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+        }, 500)
     }
 
     fun addLog(message: String) {

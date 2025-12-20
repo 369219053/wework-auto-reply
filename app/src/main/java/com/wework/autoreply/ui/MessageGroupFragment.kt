@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-// import com.wework.autoreply.MessageGroupDetailActivity
+import com.wework.autoreply.MessageGroupDetailActivity
 import com.wework.autoreply.R
 import com.wework.autoreply.ui.adapter.MessageGroupAdapter
 import com.wework.autoreply.viewmodel.MessageGroupViewModel
@@ -88,8 +88,8 @@ class MessageGroupFragment : Fragment() {
 
         // FAB点击事件 - 创建新消息组
         fab.setOnClickListener {
-            // val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
-            // startActivity(intent)
+            val intent = Intent(requireContext(), MessageGroupDetailActivity::class.java)
+            startActivity(intent)
         }
     }
 
