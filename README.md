@@ -305,7 +305,69 @@ node test_invite_batch.js
 
 ## 🐛 常见问题
 
-### 1. ADB连接失败
+### 1. 双企微弹窗无法自动点击 / 无法打开企微
+
+**问题描述:**
+- 点击"开始批量发送"后,弹出双企微选择弹窗,但是没有自动点击
+- 应用最小化返回桌面,企微没有打开
+- 或者有时能打开,有时打不开,非常不稳定
+
+**根本原因:**
+当前架构中,**只有WeworkAutoService负责处理双企微弹窗**,BatchSendService不处理弹窗:
+
+1. **WeworkAutoService配置:**
+   - 监听所有应用事件(没有`packageNames`限制)
+   - 检测到`com.vivo.doubleinstance`弹窗时,检查`shouldStartAuto`和`shouldStartBatch`
+   - 如果其中一个为true,使用**坐标点击**(`clickWeworkByCoordinate`)点击弹窗
+   - 功能一和功能二都通过WeworkAutoService点击弹窗
+
+2. **BatchSendService配置:**
+   - **只监听企微事件**(`packageNames="com.tencent.wework"`)
+   - **收不到双企微弹窗事件**(`com.vivo.doubleinstance`)
+   - 虽然有处理弹窗的代码,但永远不会被调用
+
+**错误的修改方式(会导致无法打开企微):**
+
+❌ **错误1: 移除BatchSendService的packageNames限制**
+```xml
+<!-- 错误:让BatchSendService监听所有事件 -->
+<accessibility-service
+    android:packageNames="" />  <!-- 或者完全移除这一行 -->
+```
+这会导致BatchSendService也收到弹窗事件,与WeworkAutoService冲突。
+
+❌ **错误2: 让WeworkAutoService在功能二启动时不处理弹窗**
+```kotlin
+// 错误:让WeworkAutoService跳过功能二的弹窗
+if (shouldStartBatch) {
+    return  // 不处理弹窗
+}
+```
+这会导致没有Service处理弹窗,或者只有BatchSendService处理,但BatchSendService使用resource-id查找节点,可能找不到。
+
+❌ **错误3: BatchSendService使用resource-id查找节点**
+```kotlin
+// 错误:使用resource-id查找,可能找不到节点
+val targetResourceId = "com.vivo.doubleinstance:id/second"
+val targetNode = findNodeByResourceIdRecursive(rootNode, targetResourceId)
+```
+不同手机的双企微弹窗resource-id可能不同,使用坐标点击更可靠。
+
+**正确的架构(当前版本):**
+- ✅ **只有WeworkAutoService处理双企微弹窗**
+- ✅ **WeworkAutoService使用坐标点击,不依赖resource-id**
+- ✅ **BatchSendService只处理企微内的事件**
+- ✅ **功能一和功能二都通过WeworkAutoService点击弹窗**
+
+**解决方案:**
+如果遇到无法打开企微的问题,请恢复到GitHub上的最新版本:
+```bash
+git restore app/src/main/java/com/wework/autoreply/BatchSendService.kt
+git restore app/src/main/java/com/wework/autoreply/WeworkAutoService.kt
+git restore app/src/main/res/xml/batch_send_service_config.xml
+```
+
+### 2. ADB连接失败
 ```bash
 # 重启ADB服务
 adb kill-server
@@ -318,27 +380,47 @@ adb connect 192.168.31.xxx:5555
 adb devices
 ```
 
-### 2. 找不到"查看"按钮
+### 3. 找不到"查看"按钮
 - 确认在"新的客户"列表页面
 - 确认有待处理的好友申请
 - 检查UI dump: `adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml`
 
-### 3. 客户未选中
+### 4. 客户未选中
 - 确认客户在"今天"分组下
 - 检查客户名称是否完全匹配
 - 查看日志中的Y坐标范围
 
-### 4. 邀请失败
+### 5. 邀请失败
 - 检查群聊名称是否**完全匹配**(包括括号和数字)
 - 确认客户已经通过好友验证
 - 查看 `customers.json` 确认记录
 
-### 5. 返回页面错误
+### 6. 返回页面错误
 - 脚本使用UI元素检测页面状态
 - 如果检测失败,手动返回到正确页面
 - 查看日志中的页面检测信息
 
 ## 📅 更新日志
+
+### V3.1 (2025-12-21) - 双企微支持 (进行中)
+
+**已完成:**
+- ✅ **双APK架构** - 使用Product Flavors创建APK1(企微1)和APK2(企微2)
+- ✅ **独立数据库** - 每个APK有独立的数据库和SharedPreferences
+- ✅ **消息组功能** - 恢复MessageGroupDetailActivity,支持创建和管理消息组
+- ✅ **双企微弹窗处理** - WeworkAutoService统一处理双企微弹窗,使用坐标点击
+
+**未完成的任务:**
+- ⚠️ **第二次执行脚本失败** - 执行完一次脚本后,再次点击"开始批量发送"无法打开企微
+  - **问题原因**: `hasClickedWeworkDialog`标志在第一次执行后设置为true,第二次执行时不会点击弹窗
+  - **解决方案**: 需要在脚本完成时重置`hasClickedWeworkDialog = false`,或者在检测到新任务时重置
+  - **影响范围**: 功能一和功能二都受影响
+  - **临时解决方案**: 重启应用或重新开启无障碍服务
+
+**技术要点:**
+- **双企微弹窗处理架构**: 只有WeworkAutoService处理弹窗,BatchSendService不处理
+- **坐标点击 vs Resource-ID**: 使用坐标点击更可靠,不依赖resource-id
+- **PackageNames限制**: BatchSendService只监听企微事件,不监听弹窗事件
 
 ### V3.0 (2025-12-18) - 批量发送功能完成
 - ✅ **批量发送消息功能** - 从素材库聊天转发消息到多个群聊/联系人
