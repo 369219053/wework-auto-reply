@@ -139,6 +139,25 @@ class WeworkAutoService : AccessibilityService() {
                 return
             }
 
+            // 🔥 检查是否是新任务启动,如果是,重置hasClickedWeworkDialog标志
+            // 这样可以确保每次新任务启动时都能正确处理弹窗
+            if (shouldStartAuto) {
+                val startTime = prefsAuto.getLong("start_time", 0)
+                val timeDiff = System.currentTimeMillis() - startTime
+                if (timeDiff < 3000) {  // 3秒内认为是新任务启动
+                    android.util.Log.e(TAG, "🔄 检测到功能一新任务启动(timeDiff=${timeDiff}ms),重置hasClickedWeworkDialog")
+                    hasClickedWeworkDialog = false
+                }
+            }
+            if (shouldStartBatch) {
+                val startTime = prefsBatch.getLong("start_time", 0)
+                val timeDiff = System.currentTimeMillis() - startTime
+                if (timeDiff < 3000) {  // 3秒内认为是新任务启动
+                    android.util.Log.e(TAG, "🔄 检测到功能二新任务启动(timeDiff=${timeDiff}ms),重置hasClickedWeworkDialog")
+                    hasClickedWeworkDialog = false
+                }
+            }
+
             // 🔥 只点击一次,避免重复处理
             if (hasClickedWeworkDialog) {
                 android.util.Log.e(TAG, "⚠️ 已经点击过弹窗,跳过")

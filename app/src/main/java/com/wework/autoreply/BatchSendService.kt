@@ -225,12 +225,17 @@ class BatchSendService : AccessibilityService() {
         openWework()
     }
 
+    // 导航重试计数器
+    private var navigateRetryCount = 0
+    private val MAX_NAVIGATE_RETRY = 5
+
     /**
      * 导航到消息页面
+     * 🔥 智能识别当前页面,如果不在消息页面则自动导航
      */
-    private fun navigateToMessages() {
-        Log.e(TAG, "📱 导航到消息页面")
-        sendLog("📱 导航到消息页面...")
+    private fun navigateToMessages(retryCount: Int = 0) {
+        Log.e(TAG, "📱 导航到消息页面 (重试次数: $retryCount/$MAX_NAVIGATE_RETRY)")
+        sendLog("📱 检查当前页面...")
 
         val rootNode = rootInActiveWindow ?: run {
             Log.e(TAG, "❌ 无法获取窗口信息")
@@ -240,20 +245,37 @@ class BatchSendService : AccessibilityService() {
 
         Log.e(TAG, "✅ rootNode获取成功")
 
-        // 检查是否已经在消息页面
-        val hasMessageTab = findNodeByText(rootNode, "消息") != null
-        val hasContactTab = findNodeByText(rootNode, "通讯录") != null
+        // 🔥 查找底部导航栏的"消息"按钮
+        val messagesButton = findNodeByText(rootNode, "消息")
 
-        Log.e(TAG, "🔍 hasMessageTab=$hasMessageTab, hasContactTab=$hasContactTab")
+        if (messagesButton != null) {
+            // 找到"消息"按钮,说明在主页面
+            val isSelected = messagesButton.isSelected
+            Log.e(TAG, "🔍 找到消息按钮, isSelected=$isSelected")
 
-        if (hasMessageTab && hasContactTab) {
-            // 在主页面，点击"消息"按钮
-            Log.e(TAG, "✅ 在主页面,准备点击消息按钮")
-            val messagesButton = findNodeByText(rootNode, "消息")
-            if (messagesButton != null) {
-                Log.e(TAG, "✅ 找到消息按钮,点击")
+            if (isSelected) {
+                // 已经在消息页面,直接打开素材库聊天
+                Log.e(TAG, "✅ 已经在消息页面,直接打开素材库聊天")
+                sendLog("✅ 已在消息页面")
+
+                // 重置重试计数器
+                navigateRetryCount = 0
+
+                Log.e(TAG, "⏰ 准备在1秒后打开素材库聊天")
+                handler.postDelayed({
+                    Log.e(TAG, "⏰ 1秒延迟结束,开始打开素材库聊天")
+                    currentState = ProcessState.OPENING_MATERIAL_CHAT
+                    openMaterialChat()
+                }, 1000)
+            } else {
+                // 不在消息页面,点击"消息"按钮切换
+                Log.e(TAG, "⚠️ 不在消息页面,点击消息按钮切换")
+                sendLog("📱 切换到消息页面...")
+
                 clickNode(messagesButton)
-                sendLog("✅ 已点击消息")
+
+                // 重置重试计数器
+                navigateRetryCount = 0
 
                 Log.e(TAG, "⏰ 准备在1.5秒后打开素材库聊天")
                 handler.postDelayed({
@@ -261,30 +283,28 @@ class BatchSendService : AccessibilityService() {
                     currentState = ProcessState.OPENING_MATERIAL_CHAT
                     openMaterialChat()
                 }, 1500)
-            } else {
-                Log.e(TAG, "❌ 未找到消息按钮,重试")
-                handler.postDelayed({ navigateToMessages() }, 1000)
             }
         } else {
-            // 不在主页面，先按返回键或直接打开素材库聊天
-            Log.e(TAG, "⚠️ 不在主页面,尝试直接打开素材库聊天")
+            // 找不到"消息"按钮,说明不在主页面
+            Log.e(TAG, "⚠️ 未找到消息按钮,不在主页面")
 
-            // 尝试直接查找素材库聊天
-            val materialChatNode = findNodeContainingText(rootNode, materialSourceChat)
-            if (materialChatNode != null) {
-                Log.e(TAG, "✅ 找到素材库聊天,直接打开")
-                clickNode(materialChatNode)
-                Log.e(TAG, "⏰ 准备在1.5秒后开始选择消息")
-                handler.postDelayed({
-                    Log.e(TAG, "⏰ 1.5秒延迟结束,开始选择消息")
-                    currentState = ProcessState.SELECTING_MESSAGES
-                    selectMessages()
-                }, 1500)
-            } else {
-                Log.e(TAG, "❌ 未找到素材库聊天,按返回键")
-                performGlobalAction(GLOBAL_ACTION_BACK)
-                handler.postDelayed({ navigateToMessages() }, 1000)
+            // 🔥 检查重试次数
+            if (retryCount >= MAX_NAVIGATE_RETRY) {
+                Log.e(TAG, "❌ 已达到最大重试次数($MAX_NAVIGATE_RETRY),停止处理")
+                sendLog("❌ 无法返回消息页面,请手动返回后重试")
+                stopProcessing()
+                return
             }
+
+            // 🔥 不要尝试直接打开素材库聊天,必须先返回主页面!
+            Log.e(TAG, "📱 按返回键返回主页面 (第${retryCount + 1}次尝试)")
+            sendLog("📱 返回主页面...")
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            // 等待1.5秒后重试
+            handler.postDelayed({
+                navigateToMessages(retryCount + 1)
+            }, 1500)
         }
     }
 
