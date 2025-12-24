@@ -1,6 +1,7 @@
 package com.wework.autoreply
 
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -117,14 +118,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startBatchProcess() {
+        android.util.Log.e("MainActivity", "🔧 startBatchProcess() 被调用")
+
         val groupName = etGroupName.text.toString().trim()
+        android.util.Log.e("MainActivity", "📋 输入的群聊名称: '$groupName'")
 
         if (groupName.isEmpty()) {
+            android.util.Log.e("MainActivity", "⚠️ 群聊名称为空")
             Toast.makeText(this, "请输入群聊名称", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (!isAccessibilityServiceEnabled()) {
+            android.util.Log.e("MainActivity", "⚠️ 无障碍服务未开启")
             Toast.makeText(this, "请先开启无障碍服务权限", Toast.LENGTH_LONG).show()
             showPermissionGuide()
             return
@@ -132,9 +138,12 @@ class MainActivity : AppCompatActivity() {
 
         // 保存群聊名称和启动标志
         configManager.setGroupName(groupName)
+        android.util.Log.e("MainActivity", "✅ configManager.setGroupName() 完成")
 
         // 设置批量处理标志到SharedPreferences
         val prefs = getSharedPreferences("wework_auto", MODE_PRIVATE)
+        android.util.Log.e("MainActivity", "📋 准备写入SharedPreferences...")
+
         prefs.edit().apply {
             putBoolean("should_start", true)  // 🔥 修复: 使用正确的键名
             putString("target_group_name", groupName)
@@ -143,6 +152,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         android.util.Log.e("MainActivity", "✅ SharedPreferences写入完成: should_start=true, groupName=$groupName")
+
+        // 立即读取验证
+        val verify = prefs.getBoolean("should_start", false)
+        android.util.Log.e("MainActivity", "🔍 验证读取: should_start=$verify")
 
         addLog("📱 准备启动企业微信...")
         Toast.makeText(this, "正在启动企业微信...", Toast.LENGTH_SHORT).show()
@@ -171,6 +184,33 @@ class MainActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "❌ 启动失败: ${e.message}", e)
+                addLog("❌ 启动企业微信失败: ${e.message}")
+                Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }, 500)
+    }
+
+    private fun openWework() {
+        addLog("📱 准备启动企业微信...")
+        Toast.makeText(this, "正在启动企业微信...", Toast.LENGTH_SHORT).show()
+
+        // 延迟500ms后启动企微,确保SharedPreferences写入完成
+        Handler(Looper.getMainLooper()).postDelayed({
+            try {
+                val launchIntent = Intent().apply {
+                    setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+
+                startActivity(launchIntent)
+                addLog("✅ 企业微信已启动，等待自动化处理...")
+
+                // 延迟500ms后最小化应用
+                Handler(Looper.getMainLooper()).postDelayed({
+                    moveTaskToBack(true)
+                }, 500)
+
+            } catch (e: Exception) {
                 addLog("❌ 启动企业微信失败: ${e.message}")
                 Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
             }
