@@ -36,6 +36,15 @@ class WeworkAutoService : AccessibilityService() {
     private var failedCount = 0
     private val approvedCustomers = mutableListOf<String>()  // 存储已通过的客户名称
 
+    // 客户数据类(包含名称和部门信息)
+    data class Customer(
+        val name: String,
+        val department: String? = null  // 可选的部门信息,用于精准匹配
+    )
+
+    // 测试邀请功能的客户列表
+    private val testInviteCustomers = mutableListOf<Customer>()
+
     // 当前处理状态
     private enum class ProcessState {
         IDLE,                    // 空闲
@@ -82,6 +91,22 @@ class WeworkAutoService : AccessibilityService() {
                     sendLog("🎯 目标群聊: $targetGroupName")
                     startBatchProcess()
                 }
+                "com.wework.autoreply.TEST_SCROLL" -> {
+                    android.util.Log.e("WEWORK_DEBUG", "📡 收到测试滚动指令")
+                    sendLog("📡 收到测试滚动指令")
+                    // 延迟2秒后开始测试滚动
+                    handler.postDelayed({
+                        testScrollPage()
+                    }, 2000)
+                }
+                "com.wework.autoreply.TEST_SEARCH" -> {
+                    android.util.Log.e("WEWORK_DEBUG", "📡 收到测试搜索指令")
+                    sendLog("📡 收到测试搜索指令")
+                    // 延迟2秒后开始测试搜索
+                    handler.postDelayed({
+                        testSearchCustomer()
+                    }, 2000)
+                }
             }
         }
     }
@@ -100,7 +125,10 @@ class WeworkAutoService : AccessibilityService() {
         sendLog("✅ WeworkAutoService已连接并准备就绪")
 
         // 注册广播接收器
-        val filter = IntentFilter("com.wework.autoreply.START_BATCH_PROCESS")
+        val filter = IntentFilter()
+        filter.addAction("com.wework.autoreply.START_BATCH_PROCESS")
+        filter.addAction("com.wework.autoreply.TEST_SCROLL")
+        filter.addAction("com.wework.autoreply.TEST_SEARCH")
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(commandReceiver, filter, Context.RECEIVER_EXPORTED)
@@ -234,31 +262,120 @@ class WeworkAutoService : AccessibilityService() {
 
         val prefs = getSharedPreferences("wework_auto", Context.MODE_PRIVATE)
 
+        // 检查是否测试搜索模式
+        val testSearchMode = prefs.getBoolean("test_search_mode", false)
+        if (testSearchMode) {
+            val startTime = prefs.getLong("start_time", 0)
+            val timeDiff = System.currentTimeMillis() - startTime
+
+            android.util.Log.e("WEWORK_DEBUG", "🔍 检测到测试搜索模式")
+
+            if (timeDiff < 60000) {
+                android.util.Log.e("WEWORK_DEBUG", "🚀 开始测试搜索!")
+
+                Toast.makeText(this, "🔍 测试搜索功能", Toast.LENGTH_LONG).show()
+
+                // 清除标志
+                prefs.edit().apply {
+                    putBoolean("test_search_mode", false)
+                    apply()
+                }
+
+                // 延迟2秒后开始测试搜索
+                handler.postDelayed({
+                    testSearchCustomer()
+                }, 2000)
+
+                return
+            }
+        }
+
         // 检查是否测试滚动模式
         val testScrollMode = prefs.getBoolean("test_scroll_mode", false)
         if (testScrollMode) {
             val startTime = prefs.getLong("start_time", 0)
             val timeDiff = System.currentTimeMillis() - startTime
 
-            android.util.Log.e("WEWORK_DEBUG", "🧪 检测到测试滚动模式")
+            android.util.Log.e("WEWORK_DEBUG", "🔄 检测到测试滚动模式")
 
             if (timeDiff < 60000) {
-                android.util.Log.e("WEWORK_DEBUG", "🚀 开始测试滚动查找好友!")
-
-                Toast.makeText(this, "🧪 测试滚动查找好友", Toast.LENGTH_LONG).show()
+                android.util.Log.e("WEWORK_DEBUG", "🚀 开始测试滚动!")
 
                 // 清除标志
-                prefs.edit().putBoolean("test_scroll_mode", false).apply()
+                prefs.edit().apply {
+                    putBoolean("test_scroll_mode", false)
+                    apply()
+                }
 
-                // 重置测试变量
-                testScrollCount = 0
-                previousViewButtonCount = 0
+                // 延迟2秒后开始测试滚动
+                handler.postDelayed({
+                    testScrollPage()
+                }, 2000)
+
+                return
+            }
+        }
+
+        // 检查是否测试邀请模式
+        // 检查是否是测试点击放大镜模式
+        val testSearchButtonMode = prefs.getBoolean("test_search_button_mode", false)
+        if (testSearchButtonMode) {
+            val startTime = prefs.getLong("start_time", 0)
+            val timeDiff = System.currentTimeMillis() - startTime
+
+            android.util.Log.e("WEWORK_DEBUG", "🔍 检测到测试点击放大镜模式")
+
+            if (timeDiff < 60000) {
+                android.util.Log.e("WEWORK_DEBUG", "🚀 开始测试点击放大镜!")
+
+                Toast.makeText(this, "🔍 测试点击放大镜", Toast.LENGTH_LONG).show()
+
+                // 清除标志
+                prefs.edit().putBoolean("test_search_button_mode", false).apply()
 
                 // 开始测试流程
-                isProcessing = true
-                currentState = ProcessState.NAVIGATING_TO_CONTACTS
                 handler.postDelayed({
-                    navigateToContacts()
+                    testClickSearchButton()
+                }, 1500)
+            }
+            return
+        }
+
+        val testInviteMode = prefs.getBoolean("test_invite_mode", false)
+        if (testInviteMode) {
+            val startTime = prefs.getLong("start_time", 0)
+            val timeDiff = System.currentTimeMillis() - startTime
+
+            android.util.Log.e("WEWORK_DEBUG", "🧪 检测到测试邀请模式")
+
+            if (timeDiff < 60000) {
+                android.util.Log.e("WEWORK_DEBUG", "🚀 开始测试邀请13个好友进群!")
+
+                Toast.makeText(this, "🧪 测试邀请13个好友进群", Toast.LENGTH_LONG).show()
+
+                // 清除标志
+                prefs.edit().putBoolean("test_invite_mode", false).apply()
+
+                // 硬编码好友名称（测试用）- 使用新的Customer数据类
+                testInviteCustomers.clear()
+                testInviteCustomers.addAll(listOf(
+                    Customer("天天一泉～小石榴"),
+                    Customer("创视空间"),
+                    Customer("April"),
+                    Customer("new"),
+                    Customer("可乐"),
+                    Customer("月色"),
+                    Customer("猫南北"),
+                    Customer("小蘑菇"),
+                    Customer("群助理", "望帅"),  // 指定部门,精准匹配
+                    Customer("宝栗@远方好物")
+                ))
+
+                android.util.Log.e("WEWORK_DEBUG", "📝 需要邀请的好友: ${testInviteCustomers.map { it.name }.joinToString(", ")}")
+
+                // 开始测试邀请
+                handler.postDelayed({
+                    testInviteCustomers()
                 }, 1500)
             }
             return
@@ -708,6 +825,38 @@ class WeworkAutoService : AccessibilityService() {
         android.util.Log.e("WEWORK_DEBUG", "📋 找到 ${viewButtons.size} 个'查看'按钮")
 
         if (viewButtons.isEmpty()) {
+            // 没找到"查看"按钮,尝试滚动查找更多
+            android.util.Log.e("WEWORK_DEBUG", "🔍 当前页面没有'查看'按钮,尝试滚动查找更多...")
+            sendLog("🔄 当前页面没有'查看'按钮,尝试滚动...")
+
+            // 查找ListView
+            val listView = findNodeByResourceId(rootNode, "com.tencent.wework:id/f_1")
+
+            if (listView != null) {
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到ListView,尝试滚动")
+
+                // 尝试滚动
+                val scrollSuccess = listView.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                android.util.Log.e("WEWORK_DEBUG", "📊 滚动结果: ${if (scrollSuccess) "成功" else "失败(已到底)"}")
+
+                if (scrollSuccess) {
+                    // 滚动成功,等待后再次查找
+                    sendLog("✅ 滚动成功,继续查找...")
+                    handler.postDelayed({
+                        processNextCustomer()  // 递归调用,再次查找
+                    }, 1000)
+                    return
+                } else {
+                    // 滚动失败,说明已经到底了,确实没有更多好友申请了
+                    android.util.Log.e("WEWORK_DEBUG", "📊 已滚动到底,确认没有更多好友申请")
+                    sendLog("📊 已滚动到底,没有更多好友申请")
+                }
+            } else {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 未找到ListView,无法滚动")
+                sendLog("⚠️ 未找到ListView")
+            }
+
+            // 确实没有更多好友申请了,进入下一步
             android.util.Log.e("WEWORK_DEBUG", "")
             android.util.Log.e("WEWORK_DEBUG", "========================================")
             android.util.Log.e("WEWORK_DEBUG", "✅ 所有好友申请已通过！")
@@ -1392,28 +1541,49 @@ class WeworkAutoService : AccessibilityService() {
 
             // 群成员RecyclerView应该有多个子节点(成员头像 + +号 + -号)
             if (childCount >= 2) {
-                // 查找这个RecyclerView中所有可点击的ImageView
-                val imageViews = mutableListOf<AccessibilityNodeInfo>()
-                findClickableImageViewsInNode(recyclerView, imageViews)
+                // 查找+号按钮: 遍历所有LinearLayout子节点,找到只有ImageView没有TextView的
+                var plusButton: AccessibilityNodeInfo? = null
 
-                android.util.Log.e("WEWORK_DEBUG", "   RecyclerView[$index]中找到 ${imageViews.size} 个可点击ImageView")
+                for (i in 0 until childCount) {
+                    val child = recyclerView.getChild(i) ?: continue
 
-                // +号应该是倒数第二个ImageView,-号是最后一个
-                if (imageViews.size >= 2) {
-                    val plusButton = imageViews[imageViews.size - 2]
-                    android.util.Log.e("WEWORK_DEBUG", "✅ 找到+号按钮(倒数第二个ImageView)，准备点击")
+                    // 检查这个子节点是否是LinearLayout
+                    if (child.className == "android.widget.LinearLayout") {
+                        // 检查是否包含TextView
+                        val hasTextView = hasTextViewChild(child)
 
+                        if (!hasTextView) {
+                            // 没有TextView,说明是+号或-号
+                            // 查找这个LinearLayout中的可点击ImageView
+                            val imageView = findClickableImageViewInNode(child)
+                            if (imageView != null) {
+                                // 找到第一个没有TextView的LinearLayout中的ImageView,应该是+号
+                                plusButton = imageView
+                                android.util.Log.e("WEWORK_DEBUG", "✅ 找到+号按钮(LinearLayout[$i]中的ImageView,没有TextView)")
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if (plusButton != null) {
                     val clicked = plusButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
 
                     if (clicked) {
                         sendLog("✅ 已点击+号")
                         android.util.Log.e("WEWORK_DEBUG", "✅ +号点击成功")
                         handler.postDelayed({
-                            currentState = ProcessState.SELECTING_MY_CUSTOMERS
-                            selectMyCustomers()
+                            currentState = ProcessState.SELECTING_CUSTOMERS
+                            // 使用currentCustomerIndex来添加客户
+                            android.util.Log.e("WEWORK_DEBUG", "📝 准备添加客户(index=$currentCustomerIndex)")
+                            searchAndAddSingleCustomer(currentCustomerIndex)
                         }, 1500)
                         return
+                    } else {
+                        android.util.Log.e("WEWORK_DEBUG", "❌ +号点击失败")
                     }
+                } else {
+                    android.util.Log.e("WEWORK_DEBUG", "❌ 未在RecyclerView[$index]中找到+号")
                 }
             }
         }
@@ -1462,6 +1632,41 @@ class WeworkAutoService : AccessibilityService() {
     }
 
     /**
+     * 检查节点是否包含TextView子节点
+     */
+    private fun hasTextViewChild(node: AccessibilityNodeInfo?): Boolean {
+        if (node == null) return false
+        if (node.className == "android.widget.TextView") {
+            return true
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            if (hasTextViewChild(child)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * 在节点中查找第一个可点击的ImageView
+     */
+    private fun findClickableImageViewInNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+        if (node.className == "android.widget.ImageView" && node.isClickable) {
+            return node
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            val result = findClickableImageViewInNode(child)
+            if (result != null) {
+                return result
+            }
+        }
+        return null
+    }
+
+    /**
      * 点击弹窗中的"添加成员"
      */
     private fun clickAddMemberInMenu() {
@@ -1495,8 +1700,9 @@ class WeworkAutoService : AccessibilityService() {
             if (clicked) {
                 sendLog("✅ 已点击添加成员")
                 handler.postDelayed({
-                    currentState = ProcessState.SELECTING_MY_CUSTOMERS
-                    selectMyCustomers()
+                    currentState = ProcessState.SELECTING_CUSTOMERS
+                    // 开始搜索并添加第一个客户
+                    searchAndAddSingleCustomer(0)
                 }, 1500)
             } else {
                 // 方案2: 查找所有父节点并尝试点击
@@ -1514,8 +1720,9 @@ class WeworkAutoService : AccessibilityService() {
                         success = true
 
                         handler.postDelayed({
-                            currentState = ProcessState.SELECTING_MY_CUSTOMERS
-                            selectMyCustomers()
+                            currentState = ProcessState.SELECTING_CUSTOMERS
+                            // 开始搜索并添加第一个客户
+                            searchAndAddSingleCustomer(0)
                         }, 1500)
                         break
                     }
@@ -1536,192 +1743,698 @@ class WeworkAutoService : AccessibilityService() {
         }
     }
 
+
+
     /**
-     * 选择"我的客户"
+     * 搜索并添加单个客户(每次只添加一个,添加完成后点击确定,然后继续下一个)
      */
-    private fun selectMyCustomers() {
-        android.util.Log.e("WEWORK_DEBUG", "🔧 selectMyCustomers() 被调用")
-        sendLog("👥 正在选择我的客户...")
+    private fun searchAndAddSingleCustomer(index: Int) {
+        // 检查是否所有客户都已添加完成
+        if (index >= testInviteCustomers.size) {
+            android.util.Log.e("WEWORK_DEBUG", "✅ 所有客户已添加完成!")
+            sendLog("✅ 所有客户已添加完成!")
+            Toast.makeText(this, "✅ 所有客户已添加完成!", Toast.LENGTH_LONG).show()
 
-        val rootNode = rootInActiveWindow ?: run {
-            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
-            sendLog("❌ 无法获取窗口信息")
-            retryOrStop()
+            currentState = ProcessState.COMPLETED
+            stopProcessing()
             return
         }
 
-        android.util.Log.e("WEWORK_DEBUG", "✅ 获取到 rootNode，开始智能判断页面状态")
+        val customer = testInviteCustomers[index]
+        android.util.Log.e("WEWORK_DEBUG", "🔍 [${index + 1}/${testInviteCustomers.size}] 开始添加客户: ${customer.name} (部门: ${customer.department ?: "无"})")
+        sendLog("🔍 [${index + 1}/${testInviteCustomers.size}] 添加: ${customer.name}")
 
-        // 智能判断1：先检查是否已经在"我的客户"页面
-        val filterNode = findNodeByText(rootNode, "根据标签筛选")
-
-        if (filterNode != null) {
-            android.util.Log.e("WEWORK_DEBUG", "✅ 已在我的客户页面，直接选择客户")
-            sendLog("✅ 已在我的客户页面")
-
-            // 已经在"我的客户"页面，直接选择客户
-            currentState = ProcessState.SELECTING_CUSTOMERS
-            selectAllCustomers()
+        // 1. 先点击"我的客户"
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
             return
         }
 
-        android.util.Log.e("WEWORK_DEBUG", "📋 不在我的客户页面，需要点击切换")
-
-        // 智能判断2：检查是否能找到"我的客户"分类标签
+        // 查找"我的客户"文本节点
         val myCustomersTextNode = findNodeByTextExact(rootNode, "我的客户")
-        android.util.Log.e("WEWORK_DEBUG", "🔍 查找'我的客户'文本节点: ${if (myCustomersTextNode != null) "找到" else "未找到"}")
+        if (myCustomersTextNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到'我的客户'文本节点")
+            sendLog("❌ 未找到'我的客户'选项,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
+        }
 
-        if (myCustomersTextNode != null) {
-            // 找到了"我的客户"文本，现在找它的头像
-            // 向上遍历找到包含它的cmd父节点
-            var parent = myCustomersTextNode.parent
-            var cmdNode: AccessibilityNodeInfo? = null
-            var depth = 0
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到'我的客户'文本节点,开始查找头像...")
 
-            while (parent != null && depth < 10) {
-                if (parent.viewIdResourceName == "com.tencent.wework:id/cmd") {
-                    cmdNode = parent
-                    android.util.Log.e("WEWORK_DEBUG", "✅ 找到cmd父节点 (深度: $depth)")
-                    break
-                }
-                parent = parent.parent
-                depth++
+        // 向上遍历找到包含它的cmd父节点
+        var parent = myCustomersTextNode.parent
+        var cmdNode: AccessibilityNodeInfo? = null
+        var depth = 0
+
+        while (parent != null && depth < 10) {
+            if (parent.viewIdResourceName == "com.tencent.wework:id/cmd") {
+                cmdNode = parent
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到cmd父节点 (深度: $depth)")
+                break
             }
+            parent = parent.parent
+            depth++
+        }
 
-            if (cmdNode != null) {
-                // 在cmd节点下查找头像节点
-                val avatarNode = findNodeByResourceId(cmdNode, "com.tencent.wework:id/lmb")
+        if (cmdNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到cmd父节点")
+            sendLog("❌ 页面结构异常,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
+        }
 
-                if (avatarNode != null) {
-                    android.util.Log.e("WEWORK_DEBUG", "✅ 找到我的客户头像，准备点击")
-                    sendLog("👆 点击我的客户...")
+        // 在cmd节点下查找头像节点
+        val avatarNode = findNodeByResourceId(cmdNode, "com.tencent.wework:id/lmb")
+        if (avatarNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到'我的客户'头像节点")
+            sendLog("❌ 未找到头像,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
+        }
 
-                    clickNode(avatarNode)
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到'我的客户'头像,准备点击...")
+        val clickSuccess = clickNode(avatarNode)
+        if (!clickSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 点击'我的客户'头像失败")
+            sendLog("❌ 点击失败,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
+        }
 
-                    // 点击后等待3秒，检查页面是否切换
+        android.util.Log.e("WEWORK_DEBUG", "✅ 点击'我的客户'头像成功,等待页面加载...")
+
+        // 2. 等待500ms后点击放大镜按钮
+        handler.postDelayed({
+            clickSearchButtonForSingleCustomer(customer, index)
+        }, 500)
+    }
+
+    /**
+     * 点击放大镜按钮(通过遍历节点查找并点击)
+     */
+    private fun clickSearchButtonForSingleCustomer(customer: Customer, index: Int) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 准备点击放大镜按钮...")
+
+        // 获取屏幕宽度
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        // 使用相对坐标计算搜索按钮位置
+        // 测试结果: 720px屏幕上,搜索按钮在x=590的位置
+        // 相对位置: screenWidth - 130
+        val searchButtonX = screenWidth - 130  // 搜索按钮的X坐标(相对)
+        val searchButtonY = 124  // 标题栏中心Y坐标
+
+        android.util.Log.e("WEWORK_DEBUG", "📍 屏幕宽度: $screenWidth, 放大镜按钮坐标: ($searchButtonX, $searchButtonY)")
+
+        // 尝试在运行时查找坐标附近的可点击节点
+        val rootNode = rootInActiveWindow
+        if (rootNode != null) {
+            android.util.Log.e("WEWORK_DEBUG", "🔍 开始遍历节点,查找坐标($searchButtonX, $searchButtonY)附近的可点击节点...")
+            val targetNode = findNodeByCoordinates(rootNode, searchButtonX, searchButtonY, 50)
+
+            if (targetNode != null) {
+                val rect = android.graphics.Rect()
+                targetNode.getBoundsInScreen(rect)
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到目标节点: ${targetNode.className}, bounds=[$rect]")
+                val clicked = targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                if (clicked) {
+                    android.util.Log.e("WEWORK_DEBUG", "✅ 成功点击节点!")
+                    sendLog("🔍 正在打开搜索...")
+
+                    // 延迟1秒后继续
                     handler.postDelayed({
-                        checkIfMyCustomersPageLoaded()
-                    }, 3000)
+                        inputSearchKeywordForSingleCustomer(customer, index)
+                    }, 1000)
                 } else {
-                    android.util.Log.e("WEWORK_DEBUG", "❌ 未找到我的客户头像")
-                    sendLog("⚠️ 未找到我的客户头像，重试中...")
-                    handler.postDelayed({ selectMyCustomers() }, 1000)
+                    android.util.Log.e("WEWORK_DEBUG", "❌ 节点点击失败,重试中...")
+                    sendLog("❌ 点击放大镜失败,重试中...")
+                    handler.postDelayed({
+                        searchAndAddSingleCustomer(index)
+                    }, 1000)
                 }
             } else {
-                android.util.Log.e("WEWORK_DEBUG", "❌ 未找到cmd父节点")
-                sendLog("⚠️ 页面结构异常，重试中...")
-                handler.postDelayed({ selectMyCustomers() }, 1000)
+                android.util.Log.e("WEWORK_DEBUG", "❌ 未找到目标节点,重试中...")
+                sendLog("❌ 未找到放大镜按钮,重试中...")
+                handler.postDelayed({
+                    searchAndAddSingleCustomer(index)
+                }, 1000)
             }
         } else {
-            // 没找到"我的客户"分类标签，说明页面还没加载好
-            android.util.Log.e("WEWORK_DEBUG", "⚠️ 页面还没加载好，1秒后重试")
-            sendLog("⚠️ 页面加载中，等待...")
-            handler.postDelayed({ selectMyCustomers() }, 1000)
-        }
-    }
-
-    /**
-     * 检查是否已经切换到"我的客户"页面
-     */
-    private fun checkIfMyCustomersPageLoaded() {
-        android.util.Log.e("WEWORK_DEBUG", "🔍 检查是否已切换到我的客户页面")
-
-        val rootNode = rootInActiveWindow ?: run {
-            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
-            sendLog("⚠️ 页面检查失败，重试中...")
-            handler.postDelayed({ selectMyCustomers() }, 1000)
-            return
-        }
-
-        // 查找"根据标签筛选"文本，这是"我的客户"视图的特征
-        val filterNode = findNodeByText(rootNode, "根据标签筛选")
-
-        if (filterNode != null) {
-            android.util.Log.e("WEWORK_DEBUG", "✅ 已切换到我的客户页面")
-            sendLog("✅ 已打开我的客户")
-
-            // 页面已切换，开始选择客户
-            currentState = ProcessState.SELECTING_CUSTOMERS
-            selectAllCustomers()
-        } else {
-            android.util.Log.e("WEWORK_DEBUG", "⚠️ 页面未切换，重试点击我的客户")
-            sendLog("⚠️ 页面未切换，重试中...")
-            handler.postDelayed({ selectMyCustomers() }, 1000)
-        }
-    }
-
-    /**
-     * 选择所有客户
-     */
-    private fun selectAllCustomers() {
-        android.util.Log.e("WEWORK_DEBUG", "🔧 selectAllCustomers() 被调用")
-        sendLog("✅ 正在选择所有新通过的客户...")
-
-        val rootNode = rootInActiveWindow ?: run {
-            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
-            sendLog("❌ 无法获取窗口信息")
-            retryOrStop()
-            return
-        }
-
-        android.util.Log.e("WEWORK_DEBUG", "✅ 获取到 rootNode，开始选择客户")
-
-        // 打印界面上的所有文本
-        android.util.Log.e("WEWORK_DEBUG", "📋 打印客户列表页面的所有文本：")
-        printAllTexts(rootNode)
-
-        // 根据已通过的客户名称列表来选择客户
-        if (approvedCustomers.isEmpty()) {
-            android.util.Log.e("WEWORK_DEBUG", "⚠️ 没有已通过的客户需要邀请")
-            sendLog("⚠️ 没有客户需要邀请，批量处理完成")
-            // 🔥 修复: 如果没有客户需要邀请，直接完成，不要继续执行
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode,重试中...")
+            sendLog("❌ 无法获取rootNode,重试中...")
             handler.postDelayed({
-                currentState = ProcessState.COMPLETED
-                stopProcessing()
-            }, 1500)
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+        }
+    }
+
+    /**
+     * 输入搜索关键词(单个客户添加模式)
+     */
+    private fun inputSearchKeywordForSingleCustomer(customer: Customer, index: Int) {
+        android.util.Log.e("WEWORK_DEBUG", "⌨️ 输入搜索关键词: ${customer.name}")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
             return
         }
 
-        android.util.Log.e("WEWORK_DEBUG", "📝 需要邀请的客户: ${approvedCustomers.joinToString(", ")}")
-
-        // 逐个查找并点击客户
-        var selectedCount = 0
-        for (customerName in approvedCustomers) {
-            android.util.Log.e("WEWORK_DEBUG", "🔍 查找客户: $customerName")
-
-            // 查找包含客户名称的节点
-            val customerNode = findNodeByText(rootNode, customerName)
-            if (customerNode == null) {
-                android.util.Log.e("WEWORK_DEBUG", "⚠️ 未找到客户: $customerName")
-                continue
-            }
-
-            // 查找客户节点的头像（向上查找父节点，然后找头像）
-            val avatarNode = findAvatarForCustomer(customerNode)
-            if (avatarNode == null) {
-                android.util.Log.e("WEWORK_DEBUG", "⚠️ 未找到客户头像: $customerName")
-                continue
-            }
-
-            if (!avatarNode.isEnabled) {
-                android.util.Log.e("WEWORK_DEBUG", "⚠️ 客户不可选择（可能已在群中）: $customerName")
-                continue
-            }
-
-            android.util.Log.e("WEWORK_DEBUG", "👆 点击选择客户: $customerName")
-            clickNode(avatarNode)
-            selectedCount++
-
-            // 每次点击后稍微延迟，避免操作过快
-            Thread.sleep(300)
+        // 查找搜索框
+        val searchBox = findNodeByClassName(rootNode, "android.widget.EditText")
+        if (searchBox == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索框")
+            sendLog("❌ 未找到搜索框,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
         }
 
-        sendLog("📝 已选择 $selectedCount 个客户")
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到搜索框,准备输入...")
 
+        // 输入搜索关键词
+        val arguments = Bundle()
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, customer.name)
+        val inputSuccess = searchBox.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+
+        if (!inputSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 输入搜索关键词失败")
+            sendLog("❌ 输入失败,重试中...")
+            handler.postDelayed({
+                searchAndAddSingleCustomer(index)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 输入搜索关键词成功,等待搜索结果...")
+
+        // 3. 等待1秒后点击搜索结果
         handler.postDelayed({
-            currentState = ProcessState.CONFIRMING_INVITE
-            confirmInvite()
+            clickSearchResultForSingleCustomer(customer, index)
+        }, 1000)
+    }
+
+    /**
+     * 点击搜索结果并确定(单个客户添加模式)
+     * 精准匹配名称+部门,如果有多个同名的,全部尝试点击
+     */
+    private fun clickSearchResultForSingleCustomer(customer: Customer, index: Int) {
+        android.util.Log.e("WEWORK_DEBUG", "👆 点击搜索结果: ${customer.name} (部门: ${customer.department ?: "无"})")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode,跳过此客户")
+
+            // 跳过此客户,继续下一个
+            handler.postDelayed({
+                // 需要先回到群聊页面,再点击+号
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        // 查找所有包含关键词的搜索结果
+        val allResults = findAllNodesByText(rootNode, customer.name)
+
+        if (allResults.isEmpty()) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索结果: ${customer.name}")
+            sendLog("❌ 未找到: ${customer.name},跳过")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到 ${allResults.size} 个包含关键词的结果,开始精准匹配...")
+
+        // 过滤出名称精确匹配的结果
+        val exactMatches = allResults.filter { node ->
+            val nodeText = node.text?.toString() ?: ""
+            // 精准匹配:名称完全相同(不包含括号内容)
+            val isNameMatch = nodeText == customer.name
+
+            if (!isNameMatch) {
+                return@filter false
+            }
+
+            // 如果指定了部门,还需要匹配部门
+            if (customer.department != null) {
+                // 查找部门信息节点
+                val departmentNode = findDepartmentForCustomer(node)
+                val departmentText = departmentNode?.text?.toString() ?: ""
+                android.util.Log.e("WEWORK_DEBUG", "🔍 检查部门: $departmentText vs ${customer.department}")
+                return@filter departmentText.contains(customer.department)
+            }
+
+            true
+        }
+
+        if (exactMatches.isEmpty()) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 没有精准匹配的结果: ${customer.name} (部门: ${customer.department ?: "无"})")
+            sendLog("❌ 未找到精准匹配: ${customer.name},跳过")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到 ${exactMatches.size} 个精准匹配的结果,开始尝试点击...")
+
+        // 遍历所有精准匹配的结果,尝试点击每一个
+        var clickedCount = 0
+        for ((idx, resultNode) in exactMatches.withIndex()) {
+            val nodeText = resultNode.text?.toString() ?: ""
+            android.util.Log.e("WEWORK_DEBUG", "🔍 检查第 ${idx + 1} 个精准匹配结果: $nodeText")
+
+            // 查找对应的头像
+            val avatarNode = findAvatarForCustomer(resultNode)
+            if (avatarNode == null) {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 第 ${idx + 1} 个结果没有头像,跳过")
+                continue
+            }
+
+            // 检查头像是否可点击
+            if (!avatarNode.isEnabled) {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 第 ${idx + 1} 个结果的头像不可点击(已在群里),跳过")
+                continue
+            }
+
+            android.util.Log.e("WEWORK_DEBUG", "✅ 第 ${idx + 1} 个结果的头像可点击,准备点击...")
+
+            val clickSuccess = clickNode(avatarNode)
+            if (clickSuccess) {
+                clickedCount++
+                android.util.Log.e("WEWORK_DEBUG", "✅ 第 ${idx + 1} 个结果点击成功! (已点击 $clickedCount 个)")
+
+                // 等待一下,避免点击过快
+                Thread.sleep(200)
+            } else {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 第 ${idx + 1} 个结果点击失败")
+            }
+        }
+
+        if (clickedCount == 0) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 所有精准匹配的结果都无法点击(都已在群里),跳过此客户")
+            sendLog("⚠️ ${customer.name} 已在群里,跳过")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 成功点击了 $clickedCount 个客户")
+        sendLog("✅ 已选择 $clickedCount 个: ${customer.name}")
+
+        // 等待500ms后点击确定按钮
+        handler.postDelayed({
+            clickConfirmButtonForSingleCustomer(customer, index)
+        }, 500)
+    }
+
+    /**
+     * 点击确定按钮(单个客户添加模式)
+     */
+    private fun clickConfirmButtonForSingleCustomer(customer: Customer, index: Int) {
+        android.util.Log.e("WEWORK_DEBUG", "👆 点击确定按钮")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode,跳过此客户")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        // 查找确定按钮
+        val confirmButton = findNodeByText(rootNode, "确定")
+        if (confirmButton == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到确定按钮")
+            sendLog("❌ 未找到确定按钮,跳过")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到确定按钮,准备点击...")
+
+        val clickSuccess = clickNode(confirmButton)
+        if (!clickSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 点击确定按钮失败")
+            sendLog("❌ 点击确定失败,跳过")
+
+            // 按返回键返回,然后继续下一个客户
+            performGlobalAction(GLOBAL_ACTION_BACK)
+
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 点击确定按钮成功,客户已添加: ${customer.name}")
+        sendLog("✅ 已添加: ${customer.name}")
+
+        // 5. 等待1.5秒后检查是否有邀请弹窗
+        handler.postDelayed({
+            checkAndClickInviteButtonForSingleCustomer(index)
         }, 1500)
+    }
+
+    /**
+     * 检查并点击邀请按钮(智能识别是否有邀请弹窗)
+     */
+    private fun checkAndClickInviteButtonForSingleCustomer(index: Int) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 检查是否有邀请弹窗...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null,直接继续下一个客户")
+            // 继续下一个客户
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 500)
+            return
+        }
+
+        // 查找"邀请"按钮（精确匹配）
+        val inviteButton = findNodeByTextExact(rootNode, "邀请")
+
+        if (inviteButton != null && inviteButton.isClickable) {
+            android.util.Log.e("WEWORK_DEBUG", "✅ 发现邀请弹窗,点击邀请按钮")
+            sendLog("📨 点击邀请按钮...")
+
+            val clicked = clickNode(inviteButton)
+            if (clicked) {
+                android.util.Log.e("WEWORK_DEBUG", "✅ 邀请按钮点击成功")
+                sendLog("✅ 已确认邀请")
+            } else {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 邀请按钮点击失败")
+            }
+
+            // 等待1秒后继续下一个客户
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 1000)
+        } else {
+            android.util.Log.e("WEWORK_DEBUG", "ℹ️ 没有邀请弹窗,直接继续下一个客户")
+
+            // 没有邀请弹窗,直接继续下一个客户
+            handler.postDelayed({
+                continueNextCustomer(index + 1)
+            }, 500)
+        }
+    }
+
+    /**
+     * 继续下一个客户
+     */
+    private fun continueNextCustomer(nextIndex: Int) {
+        if (nextIndex >= testInviteCustomers.size) {
+            android.util.Log.e("WEWORK_DEBUG", "✅ 所有客户已添加完成!")
+            sendLog("✅ 所有客户已添加完成!")
+            Toast.makeText(this, "✅ 所有客户已添加完成!", Toast.LENGTH_LONG).show()
+
+            currentState = ProcessState.COMPLETED
+            stopProcessing()
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "🔄 准备添加下一个客户(index=$nextIndex)...")
+
+        // 保存当前要添加的客户索引
+        currentCustomerIndex = nextIndex
+
+        // 点击确定后回到群详情页面,需要再次点击+号
+        currentState = ProcessState.CLICKING_ADD_BUTTON
+        clickPlusButtonInGroupDetail()
+    }
+
+    /**
+     * 测试搜索客户
+     */
+    private fun testSearchCustomer() {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 testSearchCustomer() 被调用")
+        sendLog("🔍 开始测试搜索功能...")
+
+        // 1. 点击放大镜按钮
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode")
+            return
+        }
+
+        // 查找放大镜按钮 (resource-id: com.tencent.wework:id/nhn)
+        val searchButton = findNodeByResourceId(rootNode, "com.tencent.wework:id/nhn")
+        if (searchButton == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到放大镜按钮")
+            sendLog("❌ 未找到放大镜按钮")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到放大镜按钮,准备点击...")
+        sendLog("✅ 找到放大镜按钮,准备点击...")
+
+        val clickSuccess = clickNode(searchButton)
+        if (!clickSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 点击放大镜按钮失败")
+            sendLog("❌ 点击放大镜按钮失败")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 点击放大镜按钮成功,等待搜索框出现...")
+        sendLog("✅ 点击放大镜按钮成功,等待搜索框出现...")
+
+        // 2. 等待1秒后输入搜索关键词
+        handler.postDelayed({
+            performSearch("创视空间")
+        }, 1000)
+    }
+
+    /**
+     * 执行搜索
+     */
+    private fun performSearch(keyword: String) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 performSearch() 被调用,关键词: $keyword")
+        sendLog("🔍 搜索关键词: $keyword")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode")
+            return
+        }
+
+        // 查找搜索框 (通常是EditText)
+        val searchBox = findNodeByClassName(rootNode, "android.widget.EditText")
+        if (searchBox == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索框")
+            sendLog("❌ 未找到搜索框")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到搜索框,准备输入...")
+        sendLog("✅ 找到搜索框,准备输入...")
+
+        // 输入搜索关键词
+        val arguments = Bundle()
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, keyword)
+        val inputSuccess = searchBox.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+
+        if (!inputSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 输入搜索关键词失败")
+            sendLog("❌ 输入搜索关键词失败")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 输入搜索关键词成功,等待搜索结果...")
+        sendLog("✅ 输入搜索关键词成功,等待搜索结果...")
+
+        // 3. 等待1秒后点击搜索结果
+        handler.postDelayed({
+            clickSearchResult(keyword)
+        }, 1000)
+    }
+
+    /**
+     * 点击搜索结果
+     */
+    private fun clickSearchResult(keyword: String) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 clickSearchResult() 被调用")
+        sendLog("🔍 查找搜索结果...")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            sendLog("❌ 无法获取rootNode")
+            return
+        }
+
+        // 查找搜索结果中的客户名称
+        val resultNode = findNodeByText(rootNode, keyword)
+        if (resultNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索结果: $keyword")
+            sendLog("❌ 未找到搜索结果: $keyword")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到搜索结果,查找头像...")
+        sendLog("✅ 找到搜索结果,查找头像...")
+
+        // 查找对应的头像并点击
+        val avatarNode = findAvatarForCustomer(resultNode)
+        if (avatarNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到头像")
+            sendLog("❌ 未找到头像")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到头像,准备点击...")
+        sendLog("✅ 找到头像,准备点击...")
+
+        val clickSuccess = clickNode(avatarNode)
+        if (clickSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "✅ 点击头像成功!")
+            sendLog("✅ 点击头像成功!")
+        } else {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 点击头像失败")
+            sendLog("❌ 点击头像失败")
+        }
+    }
+
+    /**
+     * 测试滚动页面
+     */
+    private fun testScrollPage() {
+        android.util.Log.e("WEWORK_DEBUG", "🔄 testScrollPage() 被调用")
+        sendLog("🔄 开始测试滚动页面...")
+
+        // 执行5次滚动
+        performTestScroll(0, 5)
+    }
+
+    /**
+     * 执行测试滚动
+     */
+    private fun performTestScroll(count: Int, maxCount: Int) {
+        if (count >= maxCount) {
+            android.util.Log.e("WEWORK_DEBUG", "✅ 测试滚动完成,共滚动${count}次")
+            sendLog("✅ 测试滚动完成,共滚动${count}次")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "🔄 执行第${count + 1}次滚动...")
+        sendLog("🔄 执行第${count + 1}次滚动...")
+
+        performScrollDownGesture {
+            // 滚动完成后,等待1秒再继续下一次滚动
+            handler.postDelayed({
+                performTestScroll(count + 1, maxCount)
+            }, 1000)
+        }
+    }
+
+    /**
+     * 执行向下滚动手势
+     */
+    private fun performScrollDownGesture(onComplete: () -> Unit) {
+        try {
+            val displayMetrics = resources.displayMetrics
+            val screenHeight = displayMetrics.heightPixels
+            val screenWidth = displayMetrics.widthPixels
+
+            val startX = screenWidth / 2f
+            val startY = screenHeight * 0.7f
+            val endY = screenHeight * 0.3f
+
+            android.util.Log.e("WEWORK_DEBUG", "📜 执行向下滚动手势: ($startX, $startY) → ($startX, $endY)")
+
+            val path = android.graphics.Path()
+            path.moveTo(startX, startY)
+            path.lineTo(startX, endY)
+
+            val gestureBuilder = android.accessibilityservice.GestureDescription.Builder()
+            gestureBuilder.addStroke(
+                android.accessibilityservice.GestureDescription.StrokeDescription(path, 0, 500)
+            )
+
+            val result = dispatchGesture(
+                gestureBuilder.build(),
+                object : android.accessibilityservice.AccessibilityService.GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: android.accessibilityservice.GestureDescription?) {
+                        android.util.Log.e("WEWORK_DEBUG", "✅ 滚动手势完成")
+                        handler.post {
+                            onComplete()
+                        }
+                    }
+
+                    override fun onCancelled(gestureDescription: android.accessibilityservice.GestureDescription?) {
+                        android.util.Log.e("WEWORK_DEBUG", "❌ 滚动手势被取消")
+                        handler.post {
+                            onComplete()
+                        }
+                    }
+                },
+                handler
+            )
+
+            android.util.Log.e("WEWORK_DEBUG", "📋 dispatchGesture 返回: $result")
+
+            // 如果dispatchGesture返回false,说明手势分发失败,直接调用回调
+            if (!result) {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ dispatchGesture返回false,手势分发失败")
+                handler.postDelayed({
+                    onComplete()
+                }, 500)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 滚动异常: ${e.message}")
+            handler.post {
+                onComplete()
+            }
+        }
     }
 
     /**
@@ -1735,6 +2448,23 @@ class WeworkAutoService : AccessibilityService() {
             val avatar = findNodeByResourceId(parent, "com.tencent.wework:id/lmb")
             if (avatar != null) {
                 return avatar
+            }
+            parent = parent.parent
+        }
+        return null
+    }
+
+    /**
+     * 为客户节点查找对应的部门信息
+     */
+    private fun findDepartmentForCustomer(customerNode: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        // 向上查找到包含部门信息的父节点
+        var parent = customerNode.parent
+        while (parent != null) {
+            // 查找resource-id为dsr的部门信息节点
+            val department = findNodeByResourceId(parent, "com.tencent.wework:id/dsr")
+            if (department != null) {
+                return department
             }
             parent = parent.parent
         }
@@ -2312,6 +3042,930 @@ class WeworkAutoService : AccessibilityService() {
             sendLog("❌ 滚动失败: ${e.message}")
             stopProcessing()
         }
+    }
+
+    /**
+     * 测试滚动当前页面 - 只测试滚动功能,不做其他操作
+     */
+    private fun testScrollCurrentPage() {
+        android.util.Log.e("WEWORK_DEBUG", "🧪 开始测试滚动当前页面")
+        sendLog("🧪 开始测试滚动当前页面")
+
+        val rootNode = rootInActiveWindow ?: run {
+            sendLog("❌ 无法获取窗口信息")
+            Toast.makeText(this, "❌ 无法获取窗口信息", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        try {
+            // 查找ListView (resource-id="com.tencent.wework:id/f_1")
+            val listView = findNodeByResourceId(rootNode, "com.tencent.wework:id/f_1")
+
+            if (listView == null) {
+                sendLog("❌ 未找到ListView")
+                Toast.makeText(this, "❌ 未找到ListView", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            sendLog("✅ 找到ListView")
+            sendLog("📋 ListView信息:")
+            sendLog("  - scrollable: ${listView.isScrollable}")
+            sendLog("  - childCount: ${listView.childCount}")
+            sendLog("  - bounds: ${listView.getBoundsInScreen(android.graphics.Rect())}")
+
+            // 记录滚动前的状态
+            val beforeScrollText = StringBuilder()
+            beforeScrollText.append("📝 滚动前的内容:\n")
+            for (i in 0 until listView.childCount) {
+                val child = listView.getChild(i)
+                if (child != null) {
+                    val text = child.text?.toString() ?: child.contentDescription?.toString() ?: ""
+                    if (text.isNotEmpty()) {
+                        beforeScrollText.append("  - $text\n")
+                    }
+                    child.recycle()
+                }
+            }
+            sendLog(beforeScrollText.toString())
+
+            // 尝试滚动
+            sendLog("🔄 尝试滚动...")
+            val scrollSuccess = listView.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+            sendLog("📊 滚动结果: ${if (scrollSuccess) "成功" else "失败"}")
+
+            // 等待一下,然后检查滚动后的状态
+            handler.postDelayed({
+                checkAfterScroll()
+            }, 1500)
+
+        } catch (e: Exception) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 测试滚动异常: ${e.message}")
+            sendLog("❌ 测试滚动异常: ${e.message}")
+            Toast.makeText(this, "❌ 测试失败: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * 检查滚动后的状态
+     */
+    private fun checkAfterScroll() {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 检查滚动后的状态")
+        sendLog("🔍 检查滚动后的状态")
+
+        val rootNode = rootInActiveWindow ?: run {
+            sendLog("❌ 无法获取窗口信息")
+            return
+        }
+
+        try {
+            val listView = findNodeByResourceId(rootNode, "com.tencent.wework:id/f_1")
+
+            if (listView == null) {
+                sendLog("❌ 未找到ListView")
+                return
+            }
+
+            // 记录滚动后的状态
+            val afterScrollText = StringBuilder()
+            afterScrollText.append("📝 滚动后的内容:\n")
+            for (i in 0 until listView.childCount) {
+                val child = listView.getChild(i)
+                if (child != null) {
+                    val text = child.text?.toString() ?: child.contentDescription?.toString() ?: ""
+                    if (text.isNotEmpty()) {
+                        afterScrollText.append("  - $text\n")
+                    }
+                    child.recycle()
+                }
+            }
+            sendLog(afterScrollText.toString())
+
+            sendLog("✅ 测试完成!")
+            Toast.makeText(this, "✅ 测试完成,请查看日志", Toast.LENGTH_LONG).show()
+
+        } catch (e: Exception) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 检查状态异常: ${e.message}")
+            sendLog("❌ 检查状态异常: ${e.message}")
+        }
+    }
+
+    /**
+     * 测试点击放大镜按钮
+     * 假设用户已经手动进入"我的客户"页面,直接点击放大镜
+     */
+    private fun testClickSearchButton() {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 testClickSearchButton() 被调用")
+        sendLog("🔍 开始测试点击放大镜...")
+        sendLog("📝 假设您已在'我的客户'页面")
+
+        // 延迟1秒后点击放大镜
+        handler.postDelayed({
+            testClickSearchButtonFinal()
+        }, 1000)
+    }
+
+    /**
+     * 测试搜索群聊(用于测试点击放大镜)
+     */
+    private fun testSearchGroupChatForSearchButton(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 开始搜索群聊: $groupName")
+        sendLog("🔍 搜索群聊: $groupName")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            handler.postDelayed({ testSearchGroupChatForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        // 查找搜索按钮
+        val searchButton = findNodeByResourceId(rootNode, "com.tencent.wework:id/ik9")
+        if (searchButton == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索按钮")
+            handler.postDelayed({ testSearchGroupChatForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        clickNode(searchButton)
+        android.util.Log.e("WEWORK_DEBUG", "✅ 已点击搜索按钮")
+
+        // 等待搜索框出现
+        handler.postDelayed({
+            testInputGroupNameForSearchButton(groupName)
+        }, 1000)
+    }
+
+    /**
+     * 测试输入群聊名称(用于测试点击放大镜)
+     */
+    private fun testInputGroupNameForSearchButton(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "⌨️ 输入群聊名称: $groupName")
+        sendLog("⌨️ 输入群聊名称")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            handler.postDelayed({ testInputGroupNameForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        // 查找搜索输入框
+        val searchInput = findNodeByResourceId(rootNode, "com.tencent.wework:id/jvh")
+        if (searchInput == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索输入框")
+            handler.postDelayed({ testInputGroupNameForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        // 输入群聊名称
+        val arguments = Bundle()
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, groupName)
+        searchInput.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+        android.util.Log.e("WEWORK_DEBUG", "✅ 已输入群聊名称")
+
+        // 等待搜索结果
+        handler.postDelayed({
+            testClickGroupChatForSearchButton(groupName)
+        }, 1500)
+    }
+
+    /**
+     * 测试点击群聊(用于测试点击放大镜)
+     */
+    private fun testClickGroupChatForSearchButton(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "👆 点击群聊: $groupName")
+        sendLog("👆 点击群聊")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            handler.postDelayed({ testClickGroupChatForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        // 查找群聊
+        val groupNode = findNodeByTextExact(rootNode, groupName)
+        if (groupNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到群聊: $groupName")
+            handler.postDelayed({ testClickGroupChatForSearchButton(groupName) }, 1000)
+            return
+        }
+
+        clickNode(groupNode)
+        android.util.Log.e("WEWORK_DEBUG", "✅ 已点击群聊")
+        sendLog("✅ 已进入群聊")
+
+        // 等待进入群聊
+        handler.postDelayed({
+            testClickPlusButtonForSearchButton()
+        }, 1500)
+    }
+
+    /**
+     * 测试点击+号(用于测试点击放大镜)
+     */
+    private fun testClickPlusButtonForSearchButton() {
+        android.util.Log.e("WEWORK_DEBUG", "➕ 点击+号")
+        sendLog("➕ 点击+号")
+
+        clickPlusButtonInGroupDetailForSearchButton()
+    }
+
+    /**
+     * 点击群详情页面的+号按钮(用于测试点击放大镜)
+     */
+    private fun clickPlusButtonInGroupDetailForSearchButton() {
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            handler.postDelayed({ clickPlusButtonInGroupDetailForSearchButton() }, 1000)
+            return
+        }
+
+        // 查找群成员RecyclerView
+        val memberRecyclerViews = mutableListOf<AccessibilityNodeInfo>()
+        findRecyclerViews(rootNode, memberRecyclerViews)
+
+        for ((index, recyclerView) in memberRecyclerViews.withIndex()) {
+            val childCount = recyclerView.childCount
+
+            if (childCount >= 2) {
+                var plusButton: AccessibilityNodeInfo? = null
+
+                for (i in 0 until childCount) {
+                    val child = recyclerView.getChild(i) ?: continue
+
+                    if (child.className == "android.widget.LinearLayout") {
+                        val hasTextView = hasTextViewChild(child)
+
+                        if (!hasTextView) {
+                            val imageView = findClickableImageViewInNode(child)
+                            if (imageView != null) {
+                                plusButton = imageView
+                                android.util.Log.e("WEWORK_DEBUG", "✅ 找到+号按钮")
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if (plusButton != null) {
+                    val clicked = plusButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+
+                    if (clicked) {
+                        sendLog("✅ 已点击+号")
+                        android.util.Log.e("WEWORK_DEBUG", "✅ +号点击成功")
+                        handler.postDelayed({
+                            testClickMyCustomersForSearchButton()
+                        }, 1500)
+                        return
+                    }
+                }
+            }
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "❌ 未找到+号按钮，重试")
+        handler.postDelayed({ clickPlusButtonInGroupDetailForSearchButton() }, 1000)
+    }
+
+    /**
+     * 测试点击我的客户(用于测试点击放大镜)
+     */
+    private fun testClickMyCustomersForSearchButton() {
+        android.util.Log.e("WEWORK_DEBUG", "👥 点击我的客户")
+        sendLog("👥 点击我的客户")
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            handler.postDelayed({ testClickMyCustomersForSearchButton() }, 1000)
+            return
+        }
+
+        // 查找"我的客户"文本节点
+        val myCustomersTextNode = findNodeByTextExact(rootNode, "我的客户")
+        if (myCustomersTextNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到'我的客户'文本节点")
+            handler.postDelayed({ testClickMyCustomersForSearchButton() }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到'我的客户'文本节点,开始查找头像...")
+
+        // 向上遍历找到包含它的cmd父节点
+        var parent = myCustomersTextNode.parent
+        var cmdNode: AccessibilityNodeInfo? = null
+        var depth = 0
+
+        while (parent != null && depth < 10) {
+            if (parent.viewIdResourceName == "com.tencent.wework:id/cmd") {
+                cmdNode = parent
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到cmd父节点 (深度: $depth)")
+                break
+            }
+            parent = parent.parent
+            depth++
+        }
+
+        if (cmdNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到cmd父节点")
+            handler.postDelayed({ testClickMyCustomersForSearchButton() }, 1000)
+            return
+        }
+
+        // 在cmd节点下查找头像节点
+        val avatarNode = findNodeByResourceId(cmdNode, "com.tencent.wework:id:lmb")
+        if (avatarNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到'我的客户'头像节点")
+            handler.postDelayed({ testClickMyCustomersForSearchButton() }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到'我的客户'头像,准备点击...")
+        val clickSuccess = clickNode(avatarNode)
+        if (!clickSuccess) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 点击'我的客户'头像失败")
+            handler.postDelayed({ testClickMyCustomersForSearchButton() }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 点击'我的客户'头像成功,等待页面加载...")
+        sendLog("✅ 已点击我的客户")
+
+        // 等待页面加载后点击放大镜
+        handler.postDelayed({
+            testClickSearchButtonFinal()
+        }, 1500)
+    }
+
+    /**
+     * 测试点击放大镜按钮(最终步骤)
+     */
+    private fun testClickSearchButtonFinal() {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 准备点击放大镜按钮...")
+        sendLog("🔍 点击放大镜...")
+
+        // 获取屏幕宽度
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+
+        // 使用相对坐标计算搜索按钮位置
+        // 测试结果: 720px屏幕上,搜索按钮在x=590的位置
+        // 相对位置: screenWidth - 130
+        val searchButtonX = screenWidth - 130  // 搜索按钮的X坐标(相对)
+        val searchButtonY = 124  // 标题栏中心Y坐标
+
+        android.util.Log.e("WEWORK_DEBUG", "📍 屏幕宽度: $screenWidth, 放大镜按钮坐标: ($searchButtonX, $searchButtonY)")
+
+        // 尝试在运行时查找坐标附近的可点击节点
+        val rootNode = rootInActiveWindow
+        if (rootNode != null) {
+            android.util.Log.e("WEWORK_DEBUG", "🔍 开始遍历节点,查找坐标($searchButtonX, $searchButtonY)附近的可点击节点...")
+            val targetNode = findNodeByCoordinates(rootNode, searchButtonX, searchButtonY, 50)
+
+            if (targetNode != null) {
+                val rect = android.graphics.Rect()
+                targetNode.getBoundsInScreen(rect)
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到目标节点: ${targetNode.className}, bounds=[$rect]")
+                val clicked = targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                if (clicked) {
+                    android.util.Log.e("WEWORK_DEBUG", "✅ 成功点击节点!")
+                    sendLog("✅ 已点击放大镜")
+                    Toast.makeText(this, "✅ 测试完成!", Toast.LENGTH_LONG).show()
+                } else {
+                    android.util.Log.e("WEWORK_DEBUG", "❌ 节点点击失败")
+                    sendLog("❌ 节点点击失败")
+                    Toast.makeText(this, "❌ 点击失败", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                android.util.Log.e("WEWORK_DEBUG", "❌ 未找到目标节点,尝试使用GestureDescription...")
+
+                // 如果找不到节点,回退到GestureDescription
+                val path = android.graphics.Path()
+                path.moveTo(searchButtonX.toFloat(), searchButtonY.toFloat())
+
+                val gestureBuilder = android.accessibilityservice.GestureDescription.Builder()
+                gestureBuilder.addStroke(
+                    android.accessibilityservice.GestureDescription.StrokeDescription(path, 0, 200)
+                )
+
+                val gesture = gestureBuilder.build()
+                dispatchGesture(gesture, null, null)
+
+                android.util.Log.e("WEWORK_DEBUG", "✅ 已发送点击手势(200ms)")
+                sendLog("✅ 已发送点击手势")
+                Toast.makeText(this, "✅ 已发送点击", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 无法获取rootNode")
+            Toast.makeText(this, "❌ 无法获取rootNode", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * 根据坐标查找节点
+     * @param node 根节点
+     * @param targetX 目标X坐标
+     * @param targetY 目标Y坐标
+     * @param tolerance 容差范围(像素)
+     * @return 找到的节点,如果没找到返回null
+     */
+    private fun findNodeByCoordinates(
+        node: AccessibilityNodeInfo,
+        targetX: Int,
+        targetY: Int,
+        tolerance: Int
+    ): AccessibilityNodeInfo? {
+        // 获取节点的屏幕坐标
+        val rect = android.graphics.Rect()
+        node.getBoundsInScreen(rect)
+
+        // 计算节点中心点
+        val centerX = (rect.left + rect.right) / 2
+        val centerY = (rect.top + rect.bottom) / 2
+
+        // 检查是否在目标坐标附近
+        if (Math.abs(centerX - targetX) <= tolerance && Math.abs(centerY - targetY) <= tolerance) {
+            // 检查节点是否可点击
+            if (node.isClickable || node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_CLICK }) {
+                android.util.Log.e("WEWORK_DEBUG", "🎯 找到匹配节点: class=${node.className}, bounds=[$rect], clickable=${node.isClickable}")
+                return node
+            }
+        }
+
+        // 递归查找子节点
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            if (child != null) {
+                val result = findNodeByCoordinates(child, targetX, targetY, tolerance)
+                if (result != null) {
+                    return result
+                }
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * 测试邀请13个好友进群
+     * 从消息页面开始的完整流程
+     */
+    private fun testInviteCustomers() {
+        android.util.Log.e("WEWORK_DEBUG", "🧪 testInviteCustomers() 被调用")
+        sendLog("🧪 开始测试邀请好友...")
+        sendLog("📝 步骤1: 搜索群聊")
+
+        // 读取群聊名称
+        val prefs = getSharedPreferences("wework_auto", Context.MODE_PRIVATE)
+        val groupName = prefs.getString("target_group_name", "") ?: ""
+
+        if (groupName.isEmpty()) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 群聊名称为空")
+            sendLog("❌ 群聊名称为空,请先在主界面输入群聊名称")
+            Toast.makeText(this, "❌ 群聊名称为空", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "📝 目标群聊: $groupName")
+        sendLog("📝 目标群聊: $groupName")
+
+        // 开始搜索群聊
+        testSearchGroupChat(groupName)
+    }
+
+    /**
+     * 测试搜索群聊
+     */
+    private fun testSearchGroupChat(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 testSearchGroupChat() 被调用")
+        sendLog("🔍 正在搜索群聊...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            sendLog("❌ 无法获取窗口信息")
+            Toast.makeText(this, "❌ 无法获取窗口信息", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 查找搜索按钮(放大镜)
+        val searchButton = findNodeByResourceId(rootNode, "com.tencent.wework:id/nht")
+        if (searchButton == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索按钮")
+            sendLog("❌ 未找到搜索按钮")
+            Toast.makeText(this, "❌ 未找到搜索按钮", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到搜索按钮,准备点击")
+        clickNode(searchButton)
+
+        // 等待搜索页面打开,然后输入群聊名称
+        handler.postDelayed({
+            testInputSearchText(groupName)
+        }, 1500)
+    }
+
+    /**
+     * 测试输入搜索文本
+     */
+    private fun testInputSearchText(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "⌨️ testInputSearchText() 被调用")
+        sendLog("⌨️ 正在输入群聊名称...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            return
+        }
+
+        // 查找搜索输入框
+        val editText = findEditText(rootNode)
+        if (editText == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索输入框")
+            sendLog("❌ 未找到搜索输入框")
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到搜索输入框,准备输入: $groupName")
+
+        // 输入群聊名称
+        val arguments = Bundle()
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, groupName)
+        editText.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+
+        sendLog("✅ 已输入群聊名称: $groupName")
+
+        // 等待搜索结果,然后点击
+        handler.postDelayed({
+            testClickSearchResult(groupName)
+        }, 1500)
+    }
+
+    /**
+     * 测试点击搜索结果
+     */
+    private fun testClickSearchResult(groupName: String) {
+        android.util.Log.e("WEWORK_DEBUG", "👆 testClickSearchResult() 被调用")
+        sendLog("👆 正在点击搜索结果...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            return
+        }
+
+        // 查找搜索结果RecyclerView
+        val recyclerView = findNodeByResourceId(rootNode, "com.tencent.wework:id/ks8")
+        if (recyclerView == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到搜索结果RecyclerView")
+            sendLog("❌ 未找到搜索结果")
+            return
+        }
+
+        // 查找所有可点击的ViewGroup
+        val clickableViewGroups = mutableListOf<AccessibilityNodeInfo>()
+        findClickableViewGroups(recyclerView, clickableViewGroups)
+        android.util.Log.e("WEWORK_DEBUG", "📋 找到 ${clickableViewGroups.size} 个可点击的ViewGroup")
+
+        // 查找包含群聊名称的ViewGroup
+        for (viewGroup in clickableViewGroups) {
+            if (containsText(viewGroup, groupName)) {
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到包含'$groupName'的ViewGroup,准备点击")
+                clickNode(viewGroup)
+                sendLog("✅ 已点击群聊: $groupName")
+
+                // 等待进入群聊,然后点击三个点
+                handler.postDelayed({
+                    sendLog("📝 步骤2: 点击三个点")
+                    testClickThreeDots()
+                }, 1500)
+                return
+            }
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "❌ 未找到包含'$groupName'的搜索结果")
+        sendLog("❌ 未找到群聊: $groupName")
+    }
+
+    /**
+     * 测试点击三个点
+     */
+    private fun testClickThreeDots() {
+        android.util.Log.e("WEWORK_DEBUG", "👆 testClickThreeDots() 被调用")
+        sendLog("👆 正在点击三个点...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            handler.postDelayed({ testClickThreeDots() }, 1000)
+            return
+        }
+
+        // 查找三个点按钮
+        val threeDotsButton = findNodeByResourceId(rootNode, "com.tencent.wework:id/nhi")
+        if (threeDotsButton == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到三个点按钮,重试")
+            handler.postDelayed({ testClickThreeDots() }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到三个点按钮,准备点击")
+        clickNode(threeDotsButton)
+        sendLog("✅ 已点击三个点")
+
+        // 等待进入群详情页面,然后点击+号
+        handler.postDelayed({
+            sendLog("📝 步骤3: 点击+号")
+            testClickPlusButton()
+        }, 1500)
+    }
+
+    /**
+     * 测试点击+号
+     */
+    private fun testClickPlusButton() {
+        android.util.Log.e("WEWORK_DEBUG", "👆 testClickPlusButton() 被调用")
+        sendLog("👆 正在点击+号...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            handler.postDelayed({ testClickPlusButton() }, 1000)
+            return
+        }
+
+        // 查找群成员RecyclerView
+        val memberRecyclerViews = mutableListOf<AccessibilityNodeInfo>()
+        findRecyclerViews(rootNode, memberRecyclerViews)
+
+        android.util.Log.e("WEWORK_DEBUG", "📋 找到 ${memberRecyclerViews.size} 个RecyclerView")
+
+        // 遍历所有RecyclerView,找到包含成员头像的那个
+        for ((index, recyclerView) in memberRecyclerViews.withIndex()) {
+            val childCount = recyclerView.childCount
+            android.util.Log.e("WEWORK_DEBUG", "   RecyclerView[$index]: childCount=$childCount")
+
+            if (childCount >= 2) {
+                // 查找+号按钮
+                var plusButton: AccessibilityNodeInfo? = null
+
+                for (i in 0 until childCount) {
+                    val child = recyclerView.getChild(i) ?: continue
+
+                    if (child.className == "android.widget.LinearLayout") {
+                        val hasTextView = hasTextViewChild(child)
+
+                        if (!hasTextView) {
+                            val imageView = findClickableImageViewInNode(child)
+                            if (imageView != null) {
+                                plusButton = imageView
+                                android.util.Log.e("WEWORK_DEBUG", "✅ 找到+号按钮")
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if (plusButton != null) {
+                    clickNode(plusButton)
+                    sendLog("✅ 已点击+号")
+
+                    // 等待进入添加成员页面,然后开始搜索并添加第一个客户
+                    handler.postDelayed({
+                        sendLog("📝 步骤4: 开始搜索并添加客户")
+                        // 初始化currentCustomerIndex为0
+                        currentCustomerIndex = 0
+                        searchAndAddSingleCustomer(0)
+                    }, 1500)
+                    return
+                }
+            }
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "❌ 未找到+号按钮,重试")
+        handler.postDelayed({ testClickPlusButton() }, 1000)
+    }
+
+    /**
+     * 测试选择"我的客户"
+     */
+    private fun testSelectMyCustomers() {
+        android.util.Log.e("WEWORK_DEBUG", "👆 testSelectMyCustomers() 被调用")
+        sendLog("👆 正在选择我的客户...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            handler.postDelayed({ testSelectMyCustomers() }, 1000)
+            return
+        }
+
+        // 使用和selectMyCustomers()相同的逻辑
+        // 查找"我的客户"文本节点
+        val myCustomersTextNode = findNodeByTextExact(rootNode, "我的客户")
+        android.util.Log.e("WEWORK_DEBUG", "🔍 查找'我的客户'文本节点: ${if (myCustomersTextNode != null) "找到" else "未找到"}")
+
+        if (myCustomersTextNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到'我的客户'文本,重试")
+            handler.postDelayed({ testSelectMyCustomers() }, 1000)
+            return
+        }
+
+        // 向上遍历找到包含它的cmd父节点
+        var parent = myCustomersTextNode.parent
+        var cmdNode: AccessibilityNodeInfo? = null
+        var depth = 0
+
+        while (parent != null && depth < 10) {
+            if (parent.viewIdResourceName == "com.tencent.wework:id/cmd") {
+                cmdNode = parent
+                android.util.Log.e("WEWORK_DEBUG", "✅ 找到cmd父节点 (深度: $depth)")
+                break
+            }
+            parent = parent.parent
+            depth++
+        }
+
+        if (cmdNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到cmd父节点,重试")
+            handler.postDelayed({ testSelectMyCustomers() }, 1000)
+            return
+        }
+
+        // 在cmd节点下查找头像节点
+        val avatarNode = findNodeByResourceId(cmdNode, "com.tencent.wework:id/lmb")
+
+        if (avatarNode == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到我的客户头像,重试")
+            handler.postDelayed({ testSelectMyCustomers() }, 1000)
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到我的客户头像,准备点击")
+        sendLog("👆 点击我的客户...")
+        clickNode(avatarNode)
+        sendLog("✅ 已选择我的客户")
+
+        // 等待进入"我的客户"页面,然后开始勾选好友
+        handler.postDelayed({
+            sendLog("📝 步骤5: 勾选13个好友")
+            testSelectCustomersInList()
+        }, 1500)
+    }
+
+    /**
+     * 测试在"我的客户"页面勾选好友
+     */
+    private fun testSelectCustomersInList() {
+        android.util.Log.e("WEWORK_DEBUG", "🧪 testSelectCustomersInList() 被调用")
+        sendLog("🧪 开始勾选好友...")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            sendLog("❌ 无法获取窗口信息")
+            Toast.makeText(this, "❌ 无法获取窗口信息", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 打印当前页面的所有文本
+        android.util.Log.e("WEWORK_DEBUG", "📋 打印当前页面的所有文本：")
+        printAllTexts(rootNode)
+
+        // 查找ListView (添加成员页面的客户列表)
+        val listView = findNodeByResourceId(rootNode, "com.tencent.wework:id/ctt")
+        if (listView == null) {
+            android.util.Log.e("WEWORK_DEBUG", "❌ 未找到客户列表ListView")
+            sendLog("❌ 未找到客户列表")
+            Toast.makeText(this, "❌ 未找到客户列表", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        android.util.Log.e("WEWORK_DEBUG", "✅ 找到客户列表ListView")
+        sendLog("✅ 找到客户列表,开始查找并勾选好友...")
+
+        // 需要邀请的好友列表
+        val customersToInvite = approvedCustomers.toMutableList()
+        val selectedCustomers = mutableListOf<String>()
+        var scrollCount = 0
+        val maxScrolls = 20  // 最多滚动20次
+
+        // 开始查找并勾选好友
+        selectCustomersWithScroll(customersToInvite, selectedCustomers, scrollCount, maxScrolls)
+    }
+
+    /**
+     * 滚动查找并勾选客户
+     */
+    private fun selectCustomersWithScroll(
+        customersToInvite: MutableList<String>,
+        selectedCustomers: MutableList<String>,
+        scrollCount: Int,
+        maxScrolls: Int
+    ) {
+        android.util.Log.e("WEWORK_DEBUG", "🔍 selectCustomersWithScroll() 被调用")
+        android.util.Log.e("WEWORK_DEBUG", "📊 还需邀请: ${customersToInvite.size} 个, 已选择: ${selectedCustomers.size} 个, 滚动次数: $scrollCount")
+
+        val rootNode = rootInActiveWindow ?: run {
+            android.util.Log.e("WEWORK_DEBUG", "❌ rootInActiveWindow 为 null")
+            return
+        }
+
+        // 在当前页面查找并勾选客户
+        val iterator = customersToInvite.iterator()
+        while (iterator.hasNext()) {
+            val customerName = iterator.next()
+            android.util.Log.e("WEWORK_DEBUG", "🔍 查找客户: $customerName")
+
+            // 查找所有包含客户名称的节点（可能有多个同名客户）
+            val customerNodes = findAllNodesByText(rootNode, customerName)
+            if (customerNodes.isEmpty()) {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 当前页面未找到客户: $customerName")
+                continue
+            }
+
+            android.util.Log.e("WEWORK_DEBUG", "📝 找到 ${customerNodes.size} 个名为 '$customerName' 的客户")
+
+            // 尝试点击所有同名客户中可用的那个
+            var clicked = false
+            for ((index, customerNode) in customerNodes.withIndex()) {
+                // 查找客户节点的头像
+                val avatarNode = findAvatarForCustomer(customerNode)
+                if (avatarNode == null) {
+                    android.util.Log.e("WEWORK_DEBUG", "⚠️ 第${index + 1}个客户未找到头像: $customerName")
+                    continue
+                }
+
+                // 详细日志:头像节点的状态
+                android.util.Log.e("WEWORK_DEBUG", "📊 第${index + 1}个客户头像状态: isEnabled=${avatarNode.isEnabled}, isClickable=${avatarNode.isClickable}, isSelected=${avatarNode.isSelected}")
+
+                if (!avatarNode.isEnabled) {
+                    android.util.Log.e("WEWORK_DEBUG", "⚠️ 第${index + 1}个客户不可选择（可能已在群中）: $customerName")
+                    continue
+                }
+
+                // 找到可用的客户,点击它
+                android.util.Log.e("WEWORK_DEBUG", "👆 点击选择第${index + 1}个客户: $customerName")
+
+                val rect = android.graphics.Rect()
+                avatarNode.getBoundsInScreen(rect)
+                android.util.Log.e("WEWORK_DEBUG", "📊 头像节点bounds: $rect")
+
+                val clickSuccess = clickNode(avatarNode)
+                android.util.Log.e("WEWORK_DEBUG", "📊 点击结果: ${if (clickSuccess) "成功" else "失败"}")
+
+                if (clickSuccess) {
+                    selectedCustomers.add(customerName)
+                    clicked = true
+
+                    // 每次点击后稍微延迟
+                    Thread.sleep(300)
+                    break  // 只点击一个可用的
+                } else {
+                    android.util.Log.e("WEWORK_DEBUG", "⚠️ 第${index + 1}个客户点击失败: $customerName")
+                }
+            }
+
+            if (clicked) {
+                iterator.remove()  // 从待邀请列表中移除
+            } else {
+                android.util.Log.e("WEWORK_DEBUG", "⚠️ 所有名为 '$customerName' 的客户都不可选择")
+            }
+        }
+
+        sendLog("📝 已选择 ${selectedCustomers.size} 个客户")
+        android.util.Log.e("WEWORK_DEBUG", "📝 已选择客户: ${selectedCustomers.joinToString(", ")}")
+
+        // 如果还有客户需要邀请,且没有超过最大滚动次数,继续滚动
+        if (customersToInvite.isNotEmpty() && scrollCount < maxScrolls) {
+            android.util.Log.e("WEWORK_DEBUG", "🔄 还有 ${customersToInvite.size} 个客户需要查找,尝试滚动...")
+            sendLog("🔄 滚动查找更多客户...")
+
+            // 使用手势滑动来滚动页面
+            performScrollDownGesture {
+                // 滚动完成后继续查找
+                handler.postDelayed({
+                    selectCustomersWithScroll(customersToInvite, selectedCustomers, scrollCount + 1, maxScrolls)
+                }, 1000)
+            }
+            return
+        }
+
+        // 完成选择
+        android.util.Log.e("WEWORK_DEBUG", "")
+        android.util.Log.e("WEWORK_DEBUG", "========================================")
+        android.util.Log.e("WEWORK_DEBUG", "✅ 客户选择完成!")
+        android.util.Log.e("WEWORK_DEBUG", "📊 已选择: ${selectedCustomers.size} 个")
+        android.util.Log.e("WEWORK_DEBUG", "📊 未找到: ${customersToInvite.size} 个")
+        android.util.Log.e("WEWORK_DEBUG", "📝 已选择客户: ${selectedCustomers.joinToString(", ")}")
+        if (customersToInvite.isNotEmpty()) {
+            android.util.Log.e("WEWORK_DEBUG", "⚠️ 未找到客户: ${customersToInvite.joinToString(", ")}")
+        }
+        android.util.Log.e("WEWORK_DEBUG", "========================================")
+
+        sendLog("✅ 客户选择完成! 已选择 ${selectedCustomers.size} 个")
+        if (customersToInvite.isNotEmpty()) {
+            sendLog("⚠️ 未找到 ${customersToInvite.size} 个客户")
+        }
+
+        Toast.makeText(this, "✅ 已选择 ${selectedCustomers.size} 个客户", Toast.LENGTH_LONG).show()
+
+        // 现在可以点击确定按钮了
+        sendLog("📝 请手动点击确定按钮完成邀请")
     }
 
     /**

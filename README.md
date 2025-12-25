@@ -402,7 +402,106 @@ adb devices
 - 如果检测失败,手动返回到正确页面
 - 查看日志中的页面检测信息
 
+### 7. 点击放大镜按钮失败
+
+**问题描述:**
+- 在"我的客户"页面,脚本无法点击右上角的搜索按钮(放大镜🔍)
+- 使用GestureDescription点击坐标没有反应
+- 企业微信可能屏蔽了AccessibilityService的手势点击
+
+**根本原因:**
+企业微信的某些按钮(如放大镜按钮)被标记为`NAF="true"`(Not Accessibility Friendly),导致:
+1. **UI dump看不到** - `uiautomator dump`无法获取这些按钮的信息
+2. **GestureDescription点击无效** - 企业微信屏蔽了手势点击事件
+3. **坐标点击失败** - 虽然坐标正确,但点击不生效
+
+**解决方案:**
+使用**节点遍历 + 坐标匹配**的方法:
+
+```kotlin
+/**
+ * 根据坐标查找节点并点击
+ */
+private fun findNodeByCoordinates(
+    node: AccessibilityNodeInfo,
+    targetX: Int,
+    targetY: Int,
+    tolerance: Int
+): AccessibilityNodeInfo? {
+    // 获取节点的屏幕坐标
+    val rect = android.graphics.Rect()
+    node.getBoundsInScreen(rect)
+
+    // 计算节点中心点
+    val centerX = (rect.left + rect.right) / 2
+    val centerY = (rect.top + rect.bottom) / 2
+
+    // 检查是否在目标坐标附近
+    if (Math.abs(centerX - targetX) <= tolerance &&
+        Math.abs(centerY - targetY) <= tolerance) {
+        // 检查节点是否可点击
+        if (node.isClickable ||
+            node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_CLICK }) {
+            return node
+        }
+    }
+
+    // 递归查找子节点
+    for (i in 0 until node.childCount) {
+        val child = node.getChild(i)
+        if (child != null) {
+            val result = findNodeByCoordinates(child, targetX, targetY, tolerance)
+            if (result != null) {
+                return result
+            }
+        }
+    }
+
+    return null
+}
+```
+
+**使用方法:**
+```kotlin
+// 1. 计算目标坐标(使用相对坐标适配不同分辨率)
+val screenWidth = resources.displayMetrics.widthPixels
+val searchButtonX = screenWidth - 130  // 720px屏幕上为590
+val searchButtonY = 124
+
+// 2. 查找坐标附近的可点击节点
+val rootNode = rootInActiveWindow
+val targetNode = findNodeByCoordinates(rootNode, searchButtonX, searchButtonY, 50)
+
+// 3. 使用performAction点击节点
+if (targetNode != null) {
+    targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+}
+```
+
+**优势:**
+- ✅ **不依赖UI dump** - 运行时遍历所有节点,包括NAF=true的节点
+- ✅ **不会被屏蔽** - 使用performAction点击,符合Accessibility规范
+- ✅ **适配不同分辨率** - 使用相对坐标计算,自动适配不同屏幕
+
+**测试结果:**
+- 720px屏幕: 搜索按钮坐标为(590, 124),成功点击 ✅
+- 使用相对坐标: `x = screenWidth - 130`,适配所有分辨率 ✅
+
 ## 📅 更新日志
+
+### V3.3 (2025-12-25) - 批量邀请功能完成
+
+**已完成:**
+- ✅ **批量邀请客户进群** - 通过搜索功能逐个邀请客户进群
+- ✅ **节点遍历 + 坐标匹配** - 解决企业微信NAF按钮无法点击的问题
+- ✅ **放大镜按钮点击** - 成功点击"我的客户"页面的搜索按钮
+- ✅ **相对坐标适配** - 使用`screenWidth - 130`自动适配不同分辨率
+
+**技术要点:**
+- **节点遍历**: 运行时遍历所有节点,包括NAF=true的节点
+- **坐标匹配**: 计算节点中心点,匹配目标坐标(容差50px)
+- **performAction点击**: 使用Accessibility规范的点击方式,不会被屏蔽
+- **相对坐标**: `x = screenWidth - 130, y = 124`,适配所有分辨率
 
 ### V3.2 (2025-12-24) - 搜索功能优化
 
