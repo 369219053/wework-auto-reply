@@ -26,9 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etGroupName: EditText
     private lateinit var btnStartBatch: Button
     private lateinit var btnCheckPermissions: Button
-    private lateinit var btnTestInvite: Button
-    private lateinit var btnTestSearchButton: Button
-    private lateinit var btnTestSearch: Button
     private lateinit var tvApprovedCount: TextView
     private lateinit var tvInvitedCount: TextView
     private lateinit var tvFailedCount: TextView
@@ -97,9 +94,6 @@ class MainActivity : AppCompatActivity() {
         etGroupName = findViewById(R.id.et_group_name)
         btnStartBatch = findViewById(R.id.btn_start_batch)
         btnCheckPermissions = findViewById(R.id.btn_check_permissions)
-        btnTestInvite = findViewById(R.id.btn_test_invite)
-        btnTestSearchButton = findViewById(R.id.btn_test_search_button)
-        btnTestSearch = findViewById(R.id.btn_test_search)
         tvApprovedCount = findViewById(R.id.tv_approved_count)
         tvInvitedCount = findViewById(R.id.tv_invited_count)
         tvFailedCount = findViewById(R.id.tv_failed_count)
@@ -121,144 +115,6 @@ class MainActivity : AppCompatActivity() {
         btnCheckPermissions.setOnClickListener {
             checkAndRequestPermissions()
         }
-
-        btnTestInvite.setOnClickListener {
-            startTestInviteMode()
-        }
-
-        btnTestSearchButton.setOnClickListener {
-            startTestSearchButtonMode()
-        }
-
-        btnTestSearch.setOnClickListener {
-            startTestSearchMode()
-        }
-    }
-
-    /**
-     * 启动测试邀请模式
-     */
-    private fun startTestInviteMode() {
-        android.util.Log.e("WEWORK_DEBUG", "🧪 启动测试邀请模式")
-        addLog("🧪 启动测试邀请13个好友进群")
-
-        // 保存测试邀请标志到SharedPreferences
-        val prefs = getSharedPreferences("wework_auto", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putBoolean("test_invite_mode", true)
-            putLong("start_time", System.currentTimeMillis())
-            apply()
-        }
-
-        // 最小化当前应用
-        moveTaskToBack(true)
-
-        // 延迟500ms后打开企业微信
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 根据flavor确定企业微信包名
-            val weworkPackage = if (packageName.contains("second")) {
-                "com.tencent.wework2"  // Ⅱ·企业微信
-            } else {
-                "com.tencent.wework"   // 企业微信
-            }
-
-            val intent = packageManager.getLaunchIntentForPackage(weworkPackage)
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                android.util.Log.e("WEWORK_DEBUG", "✅ 已打开企业微信: $weworkPackage")
-            } else {
-                android.util.Log.e("WEWORK_DEBUG", "❌ 无法打开企业微信")
-                Toast.makeText(this, "❌ 无法打开企业微信", Toast.LENGTH_SHORT).show()
-            }
-        }, 500)
-    }
-
-    /**
-     * 启动测试搜索模式
-     */
-    /**
-     * 启动测试点击放大镜模式
-     */
-    private fun startTestSearchButtonMode() {
-        android.util.Log.e("WEWORK_DEBUG", "🔍 启动测试点击放大镜模式")
-        addLog("🔍 测试点击我的客户页面放大镜")
-
-        val groupName = etGroupName.text.toString().trim()
-        if (groupName.isEmpty()) {
-            Toast.makeText(this, "❌ 请先输入群聊名称", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // 保存测试点击放大镜标志到SharedPreferences
-        val prefs = getSharedPreferences("wework_auto", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putBoolean("test_search_button_mode", true)
-            putString("target_group_name", groupName)
-            putLong("start_time", System.currentTimeMillis())
-            apply()
-        }
-
-        // 最小化当前应用
-        moveTaskToBack(true)
-
-        // 延迟500ms后打开企业微信
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 根据flavor确定企业微信包名
-            val weworkPackage = if (packageName.contains("second")) {
-                "com.tencent.wework2"  // Ⅱ·企业微信
-            } else {
-                "com.tencent.wework"   // 企业微信
-            }
-
-            val intent = packageManager.getLaunchIntentForPackage(weworkPackage)
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                android.util.Log.e("WEWORK_DEBUG", "✅ 已打开企业微信: $weworkPackage")
-                addLog("✅ 已打开企业微信,开始测试流程...")
-            } else {
-                android.util.Log.e("WEWORK_DEBUG", "❌ 无法打开企业微信")
-                Toast.makeText(this, "❌ 无法打开企业微信", Toast.LENGTH_SHORT).show()
-            }
-        }, 500)
-    }
-
-    private fun startTestSearchMode() {
-        android.util.Log.e("WEWORK_DEBUG", "🔍 启动测试搜索模式")
-        addLog("🔍 测试搜索功能")
-
-        // 保存测试搜索标志到SharedPreferences
-        val prefs = getSharedPreferences("wework_auto", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putBoolean("test_search_mode", true)
-            putLong("start_time", System.currentTimeMillis())
-            apply()
-        }
-
-        // 最小化当前应用
-        moveTaskToBack(true)
-
-        // 延迟500ms后打开企业微信
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 根据flavor确定企业微信包名
-            val weworkPackage = if (packageName.contains("second")) {
-                "com.tencent.wework2"  // Ⅱ·企业微信
-            } else {
-                "com.tencent.wework"   // 企业微信
-            }
-
-            val intent = packageManager.getLaunchIntentForPackage(weworkPackage)
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                android.util.Log.e("WEWORK_DEBUG", "✅ 已打开企业微信: $weworkPackage")
-                addLog("✅ 已打开企业微信,请确保在'添加群成员'页面")
-            } else {
-                android.util.Log.e("WEWORK_DEBUG", "❌ 无法打开企业微信")
-                Toast.makeText(this, "❌ 无法打开企业微信", Toast.LENGTH_SHORT).show()
-            }
-        }, 500)
     }
 
     private fun startBatchProcess() {
@@ -306,9 +162,8 @@ class MainActivity : AppCompatActivity() {
 
         // 🔥 延迟500ms后启动企微,确保SharedPreferences写入完成
         Handler(Looper.getMainLooper()).postDelayed({
-            // 直接启动企业微信
             try {
-                // 使用显式Intent指定启动Activity
+                // 使用显式Intent指定启动Activity（与功能二相同的方式）
                 val launchIntent = Intent().apply {
                     setClassName("com.tencent.wework", "com.tencent.wework.launch.LaunchSplashActivity")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
